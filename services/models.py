@@ -1,6 +1,6 @@
 from django.db import models
 
-__author__ = 'Amaia Nazabal'
+__author__ = 'Amaia Nazábal'
 
 NODE = 0
 WAY = 1
