@@ -22,7 +22,7 @@ class Command(BaseCommand):
             help="The geoname id for made the matching with osm entities.")
 
     def handle(self, geoname_id, *args, **options):
-        try:
+        #try:
 
             gn_entity = Geoname.objects.get(pk=geoname_id[0])
             entite = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
@@ -51,16 +51,22 @@ class Command(BaseCommand):
                                                         match_geographical_coordinates=1,
                                                         match_type=entity['type_matching'])
 
-                correspondance = CorrespondenceEntity(reference_gn=gn_entity.id, reference_osm=entity['entity_osm'].id,
+                (latitude_osm, longitude_osm) = entity['coordinates_osm']
+                correspondence = CorrespondenceEntity(reference_gn=gn_entity.id, reference_osm=entity['entity_osm'].id,
                                                       gn_feature_class=gn_entity.fclass,
                                                       gn_feature_code=gn_entity.fcode,
-                                                      osm_key=entity['type_tag_osm'].key,
-                                                      osm_value=entity['type_tag_osm'].value,
+                                                      gn_latitude=gn_entity.latitude,
+                                                      gn_longitude=gn_entity.longitude,
+                                                      osm_name=entity['name_osm'],
+                                                      osm_key_type=entity['type_tag_osm'].key,
+                                                      osm_value_type=entity['type_tag_osm'].value,
+                                                      osm_latitude=latitude_osm,
+                                                      osm_longitude=longitude_osm,
                                                       name_levenshtein=entity['levenshtein_distance'],
                                                       type_matching=entity['type_matching'],
                                                       pertinence_score=pertinence_score)
 
-                correspondance.save()
+                correspondence.save()
 
-        except Exception as error:
-            raise CommandError(error)
+        #except Exception as error:
+        #    raise CommandError(error)

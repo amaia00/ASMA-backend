@@ -15,6 +15,8 @@ def align_algorithme(entity_gn, list_entitys_osm):
     list_aligned_entities = []
 
     for entity_osm in list_entitys_osm:
+        print("DEBUG===================================================")
+        print(entity_osm)
 
         name = get_name(entity_osm.get('tag_list'))
 
@@ -34,11 +36,13 @@ def align_algorithme(entity_gn, list_entitys_osm):
                 the name and type matching
                 """
                 list_aligned_entities.append({
+                    'name_osm': name,
                     'entity_osm': entity_osm.get('entity_osm'),
+                    'coordinates_osm': entity_osm.get('coordinates'),
                     'tag_list': entity_osm.get('tag_list'),
                     'levenshtein_distance': matching_name_level,
                     'type_matching': matching_type_level,
-                    'type_tag_osm' : type_tag_osm
+                    'type_tag_osm': type_tag_osm
                 })
 
     return list_aligned_entities

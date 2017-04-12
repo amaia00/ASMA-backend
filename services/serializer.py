@@ -45,7 +45,8 @@ class CorrespondenceEntitySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = CorrespondenceEntity
         fields = ('id', 'reference_gn', 'reference_osm',
-                  'gn_feature_class', 'gn_feature_code', 'osm_key', 'osm_value',
+                  'gn_feature_class', 'gn_feature_code', 'gn_latitude', 'gn_longitude',
+                  'osm_name', 'osm_key_type', 'osm_value_type', 'osm_latitude', 'osm_longitude',
                   'name_levenshtein', 'type_matching', 'pertinence_score')
 
 
@@ -53,7 +54,8 @@ class CorrespondenceValideSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = CorrespondenceValide
         fields = ('id', 'reference_gn', 'reference_osm',
-                  'gn_feature_class', 'gn_feature_code', 'osm_key', 'osm_value',
+                  'gn_feature_class', 'gn_feature_code', 'gn_latitude', 'gn_longitude',
+                  'osm_name', 'osm_key_type', 'osm_value_type', 'osm_latitude', 'osm_longitude',
                   'name_levenshtein', 'type_matching', 'pertinence_score', 'date_validation')
 
 
@@ -61,7 +63,8 @@ class CorrespondenceInvalideSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = CorrespondenceInvalide
         fields = ('id', 'reference_gn', 'reference_osm',
-                  'gn_feature_class', 'gn_feature_code', 'osm_key', 'osm_value',
+                  'gn_feature_class', 'gn_feature_code', 'gn_latitude', 'gn_longitude',
+                  'osm_name', 'osm_key_type', 'osm_value_type', 'osm_latitude', 'osm_longitude',
                   'name_levenshtein', 'type_matching', 'pertinence_score', 'date_validation')
 
 

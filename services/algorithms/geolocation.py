@@ -21,6 +21,13 @@ class GeoLocation:
     MIN_LON = math.radians(-180)
     MAX_LON = math.radians(180)
 
+    def __init__(self, rad_lat, rad_lon, deg_lat, deg_lon):
+        self.rad_lat = float(rad_lat)
+        self.rad_lon = float(rad_lon)
+        self.deg_lat = float(deg_lat)
+        self.deg_lon = float(deg_lon)
+        self._check_bounds()
+
     @classmethod
     def from_degrees(cls, deg_lat, deg_lon):
         rad_lat = math.radians(deg_lat)
@@ -32,13 +39,6 @@ class GeoLocation:
         deg_lat = math.degrees(rad_lat)
         deg_lon = math.degrees(rad_lon)
         return GeoLocation(rad_lat, rad_lon, deg_lat, deg_lon)
-
-    def __init__(self, rad_lat, rad_lon, deg_lat, deg_lon):
-        self.rad_lat = float(rad_lat)
-        self.rad_lon = float(rad_lon)
-        self.deg_lat = float(deg_lat)
-        self.deg_lon = float(deg_lon)
-        self._check_bounds()
 
     def __str__(self):
         degree_sign = u'\N{DEGREE SIGN}'

@@ -1,4 +1,3 @@
-
 from services.algorithms.geolocation import GeoLocation
 from services.models import Parameters, Node, Tag, Relation, Way, NODE, WAY, RELATION
 
@@ -14,8 +13,10 @@ def blocking_function(entite):
     param_distance_ratio = float(Parameters.objects.get(name='distance_ratio').value)
     shape_list = get_object_in_ratio(entite, param_distance_ratio)
 
-    for reference in shape_list:
-        entity_osm = Node.objects.filter(pk=reference)
+    for object in shape_list:
+        reference = object['id']
+
+        entity_osm = Node.objects.filter(pk=reference).values()
 
         tag_list = {}
         """
@@ -45,7 +46,8 @@ def blocking_function(entite):
 
         if tag_list:
             list_match_entities.append({'entity_osm': entity_osm[0],
-                                       'tag_list': tag_list})
+                                        'coordinates': object['coordinates'],
+                                        'tag_list': tag_list})
 
     return list_match_entities
 
@@ -92,11 +94,46 @@ def get_object_in_ratio(entity, ratio):
     for node in node_list:
         point = Node.objects.get(pk=node.id)
         shape = point.way_reference_id or point.relation_reference_id or node.id
-        entities_list.append(shape)
+
+        entities_list.append({
+            'id': shape,
+            'coordinates': (point.latitude, point.longitude)
+        })
+
+    id = None
+    coordinates = None
+    final_list = []
 
     """
     We reduce the list for erase entities duplicates
+    Control cut
     """
-    entities_list = set(entities_list)
-    return entities_list
+    for entity_l in entities_list:
 
+        (latitude, longitude) = entity_l['coordinates']
+
+        if entity_l['id'] == id:
+            '''
+            If the news coordinates are more closer than the coordinates of the previous point, then we have to replace
+            the coordinates and remove the entity of the list, otherwise we ignore the point
+            '''
+            (lat_before, long_before) = coordinates
+
+            if coordinates and loc.distance_to(GeoLocation.from_degrees(lat_before, long_before)) > loc.distance_to(
+                    GeoLocation.from_degrees(latitude, longitude)):
+
+                final_list.remove({
+                    'id': id,
+                    'coordinates': coordinates
+                })
+                final_list.append(entity_l)
+        else:
+            '''
+            If it's another entity
+            '''
+            final_list.append(entity_l)
+
+        coordinates = (latitude, longitude)
+        id = entity_l['id']
+
+    return final_list

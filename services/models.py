@@ -94,10 +94,18 @@ class CorrespondenceEntity(models.Model):
     reference_gn = models.BigIntegerField()
     reference_osm = models.BigIntegerField()
 
+    # geonames attributes
     gn_feature_class = models.CharField(max_length=1)
     gn_feature_code = models.CharField(max_length=10)
-    osm_key = models.CharField(max_length=50)
-    osm_value = models.CharField(max_length=300)
+    gn_latitude = models.DecimalField(decimal_places=7, max_digits=11)
+    gn_longitude = models.DecimalField(decimal_places=7, max_digits=11)
+
+    # osm attributes
+    osm_name = models.CharField(max_length=300)
+    osm_key_type = models.CharField(max_length=50)
+    osm_value_type = models.CharField(max_length=300)
+    osm_latitude = models.DecimalField(decimal_places=7, max_digits=11)
+    osm_longitude = models.DecimalField(decimal_places=7, max_digits=11)
 
     name_levenshtein = models.DecimalField(decimal_places=3, max_digits=4)
     type_matching = models.DecimalField(decimal_places=3, max_digits=4)
@@ -113,10 +121,18 @@ class CorrespondenceValide(models.Model):
     reference_gn = models.BigIntegerField()
     reference_osm = models.BigIntegerField()
 
-    gn_feature_class = models.CharField(max_length=1, null=True)
-    gn_feature_code = models.CharField(max_length=10, null=True)
-    osm_key = models.CharField(max_length=50, null=True)
-    osm_value = models.CharField(max_length=300, null=True)
+    # geonames attributes
+    gn_feature_class = models.CharField(max_length=1)
+    gn_feature_code = models.CharField(max_length=10)
+    gn_latitude = models.DecimalField(decimal_places=7, max_digits=11)
+    gn_longitude = models.DecimalField(decimal_places=7, max_digits=11)
+
+    # osm attributes
+    osm_name = models.CharField(max_length=300)
+    osm_key_type = models.CharField(max_length=50)
+    osm_value_type = models.CharField(max_length=300)
+    osm_latitude = models.DecimalField(decimal_places=7, max_digits=11)
+    osm_longitude = models.DecimalField(decimal_places=7, max_digits=11)
 
     name_levenshtein = models.DecimalField(decimal_places=3, max_digits=4, null=True)
     type_matching = models.DecimalField(decimal_places=3, max_digits=4, null=True)
@@ -133,10 +149,18 @@ class CorrespondenceInvalide(models.Model):
     reference_gn = models.BigIntegerField()
     reference_osm = models.BigIntegerField()
 
-    gn_feature_class = models.CharField(max_length=1, null=True)
-    gn_feature_code = models.CharField(max_length=10, null=True)
-    osm_key = models.CharField(max_length=50, null=True)
-    osm_value = models.CharField(max_length=300, null=True)
+    # geonames attributes
+    gn_feature_class = models.CharField(max_length=1)
+    gn_feature_code = models.CharField(max_length=10)
+    gn_latitude = models.DecimalField(decimal_places=7, max_digits=11)
+    gn_longitude = models.DecimalField(decimal_places=7, max_digits=11)
+
+    # osm attributes
+    osm_name = models.CharField(max_length=300)
+    osm_key_type = models.CharField(max_length=50)
+    osm_value_type = models.CharField(max_length=300)
+    osm_latitude = models.DecimalField(decimal_places=7, max_digits=11)
+    osm_longitude = models.DecimalField(decimal_places=7, max_digits=11)
 
     name_levenshtein = models.DecimalField(decimal_places=3, max_digits=4, null=True)
     type_matching = models.DecimalField(decimal_places=3, max_digits=4, null=True)
