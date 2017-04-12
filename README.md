@@ -25,3 +25,9 @@ Execute geonames importation
 
 
 ./manage.py correspondance 8224609
+
+
+ps aux | grep mysql
+kill -9 8922
+mysql.server stop
+mysql.server start

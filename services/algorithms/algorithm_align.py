@@ -23,7 +23,6 @@ def align_algorithme(entity_gn, list_entitys_osm):
         # TODO: avoid import if the noeud doesn't have the tag name
         if name:
 
-            type_tag_osm = ''
             matching_name_level = match_name_string(entity_gn, name)
             if matching_name_level:
 
@@ -38,6 +37,7 @@ def align_algorithme(entity_gn, list_entitys_osm):
                 list_aligned_entities.append({
                     'name_osm': name,
                     'entity_osm': entity_osm.get('entity_osm'),
+                    'shape_osm': entity_osm.get('shape_osm'),
                     'coordinates_osm': entity_osm.get('coordinates'),
                     'tag_list': entity_osm.get('tag_list'),
                     'levenshtein_distance': matching_name_level,

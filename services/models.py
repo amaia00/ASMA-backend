@@ -1,10 +1,11 @@
 from django.db import models
+from datetime import datetime
 
 __author__ = 'Amaia Nazábal'
 
-NODE = 0
-WAY = 1
-RELATION = 2
+NODE = 'NODE'
+WAY = 'WAY'
+RELATION = 'RELATION'
 
 STRUCTURE_TYPE = (
     (NODE, 'NODE'),
@@ -17,7 +18,7 @@ class Tag(models.Model):
     id = models.AutoField(primary_key=True)
 
     reference = models.BigIntegerField()
-    type = models.IntegerField(choices=STRUCTURE_TYPE)
+    type = models.CharField(choices=STRUCTURE_TYPE, max_length=10, default='')
 
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=300)
@@ -95,13 +96,16 @@ class CorrespondenceEntity(models.Model):
     reference_osm = models.BigIntegerField()
 
     # geonames attributes
+    gn_name = models.CharField(max_length=200, default='')
     gn_feature_class = models.CharField(max_length=1, default='')
     gn_feature_code = models.CharField(max_length=10, default='')
+    gn_feature_name = models.CharField(max_length=200, default='')
     gn_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     gn_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
     # osm attributes
     osm_name = models.CharField(max_length=300, default='')
+    osm_type = models.CharField(choices=STRUCTURE_TYPE, default='', max_length=10)
     osm_key_type = models.CharField(max_length=50, default='')
     osm_value_type = models.CharField(max_length=300, default='')
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
@@ -111,6 +115,7 @@ class CorrespondenceEntity(models.Model):
     type_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
     pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, default=0, null=True)
+    date_matching = models.DateTimeField(auto_now_add=True, blank=True)
 
     class Meta:
         unique_together = ('reference_gn', 'reference_osm')
@@ -122,13 +127,16 @@ class CorrespondenceValide(models.Model):
     reference_osm = models.BigIntegerField()
 
     # geonames attributes
+    gn_name = models.CharField(max_length=200, default='')
     gn_feature_class = models.CharField(max_length=1, default='')
     gn_feature_code = models.CharField(max_length=10, default='')
+    gn_feature_name = models.CharField(max_length=200, default='')
     gn_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     gn_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
     # osm attributes
     osm_name = models.CharField(max_length=300, default='')
+    osm_type = models.CharField(choices=STRUCTURE_TYPE, default='', max_length=10)
     osm_key_type = models.CharField(max_length=50, default='')
     osm_value_type = models.CharField(max_length=300, default='')
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
@@ -150,13 +158,16 @@ class CorrespondenceInvalide(models.Model):
     reference_osm = models.BigIntegerField()
 
     # geonames attributes
+    gn_name = models.CharField(max_length=200, default='')
     gn_feature_class = models.CharField(max_length=1, default='')
     gn_feature_code = models.CharField(max_length=10, default='')
+    gn_feature_name = models.CharField(max_length=200, default='')
     gn_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     gn_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
     # osm attributes
     osm_name = models.CharField(max_length=300, default='')
+    osm_type = models.CharField(choices=STRUCTURE_TYPE, default='', max_length=10)
     osm_key_type = models.CharField(max_length=50, default='')
     osm_value_type = models.CharField(max_length=300, default='')
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)

@@ -13,12 +13,15 @@ def blocking_function(entite):
     param_distance_ratio = float(Parameters.objects.get(name='distance_ratio').value)
     shape_list = get_object_in_ratio(entite, param_distance_ratio)
 
+    print("shape list", shape_list)
     for object in shape_list:
         reference = object['id']
 
         entity_osm = Node.objects.filter(pk=reference).values()
 
         tag_list = {}
+        shape_osm = ''
+
         """
         Here, we get the tags of every Node or WAY or RELATION
         """
@@ -27,6 +30,7 @@ def blocking_function(entite):
             It's just a node
             """
             tag_list = Tag.objects.filter(reference=reference, type=NODE)
+            shape_osm = NODE
         else:
             entity_osm = Relation.objects.filter(pk=reference)
 
@@ -35,6 +39,7 @@ def blocking_function(entite):
                 It's a relation
                 """
                 tag_list = Tag.objects.filter(reference=reference, type=RELATION)
+                shape_osm = RELATION
             else:
                 entity_osm = Way.objects.filter(pk=reference)
 
@@ -43,11 +48,15 @@ def blocking_function(entite):
                     It's a way
                     """
                     tag_list = Tag.objects.filter(reference=reference, type=WAY)
+                    shape_osm = WAY
 
         if tag_list:
             list_match_entities.append({'entity_osm': entity_osm[0],
+                                        'shape_osm': shape_osm,
                                         'coordinates': object['coordinates'],
                                         'tag_list': tag_list})
+
+    print("list tag entities", list_match_entities)
 
     return list_match_entities
 
@@ -76,7 +85,7 @@ def get_object_in_ratio(entity, ratio):
     query += "OR " if loc.meridian180_within_distance(ratio) else "AND "
 
     query += "longitude <= %(long_max)s) AND ACOS(SIN(%(lat_loc)s) * SIN(latitude) + COS(%(lat_loc)s) * COS(latitude)" \
-             " * COS(longitude - %(long_loc)s)) <= %(ang_radius)s"
+             " * COS(longitude - %(long_loc)s)) <= %(ang_radius)s ORDER BY id"
 
     params = {
         'lat_min': lat_min,
@@ -108,6 +117,7 @@ def get_object_in_ratio(entity, ratio):
     We reduce the list for erase entities duplicates
     Control cut
     """
+
     for entity_l in entities_list:
 
         (latitude, longitude) = entity_l['coordinates']
@@ -122,6 +132,12 @@ def get_object_in_ratio(entity, ratio):
             if coordinates and loc.distance_to(GeoLocation.from_degrees(lat_before, long_before)) > loc.distance_to(
                     GeoLocation.from_degrees(latitude, longitude)):
 
+                print("OBJETO QUE QUEREMOS ELIMINAR")
+                print({
+                    'id': id,
+                    'coordinates': coordinates
+                })
+
                 final_list.remove({
                     'id': id,
                     'coordinates': coordinates
@@ -132,6 +148,7 @@ def get_object_in_ratio(entity, ratio):
             If it's another entity
             '''
             final_list.append(entity_l)
+
 
         coordinates = (latitude, longitude)
         id = entity_l['id']

@@ -148,7 +148,6 @@ class EntityOSMDetails(viewsets.ViewSet):
         serializer_ways = {}
 
         type = 'NODE'
-
         if not attributes:
             attributes = Way.objects.filter(pk=id)
             serializer = WaySerializer(attributes, many=True, context=serializer_context)
