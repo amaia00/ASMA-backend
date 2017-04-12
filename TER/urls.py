@@ -26,11 +26,12 @@ router.register(r'relations', views.RelationViewSet)
 router.register(r'geoname', views.GeonameViewSet)
 router.register(r'feature-code', views.FeatureCodeViewSet)
 router.register(r'parameters', views.ParametersViewSet)
+router.register(r'entity-osm-details/(?P<id>.+)/$', views.EntityOSMDetails, base_name='entity-osm-details')
 
 router.register(r'correspondence', views.CorrespondenceEntityView, base_name='correspondence')
 router.register(r'correspondence-types', views.CorrespondenceTypesViewSet)
 router.register(r'correspondence-types-close', views.CorrespondenceTypesCloseViewSet)
-router.register(r'correspondence-valide', views.CorrespondenceValideView,  base_name='correspondence-valide')
+router.register(r'correspondence-valide', views.CorrespondenceValideView, base_name='correspondence-valide')
 router.register(r'correspondence-invalide', views.CorrespondenceInvalideView,  base_name='correspondence-invalide')
 
 

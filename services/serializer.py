@@ -18,13 +18,13 @@ class PointSerializer(serializers.HyperlinkedModelSerializer):
 class WaySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Way
-        fields = ('id', 'relation_reference')
+        fields = ('id', 'relation_reference', 'role')
 
 
 class RelationSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Relation
-        fields = ('id', 'role')
+        fields = ('id', 'role', 'relation_reference')
 
 
 class GeonameSerializer(serializers.HyperlinkedModelSerializer):

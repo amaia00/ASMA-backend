@@ -2,14 +2,14 @@ from rest_framework import views, viewsets, permissions
 from services.api.geonames import search_entity
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
 from .permissions import ReadOnlyPermission
 from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geoname, \
     FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide
 from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationSerializer, \
     CorrespondenceValideSerializer, CorrespondenceEntitySerializer, ParameterSerializer, GeonameSerializer,\
-    FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, CorrespondenceInvalideSerializer
-from django.shortcuts import get_object_or_404
+    FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
+    CorrespondenceInvalideSerializer
+from rest_framework.request import Request
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -58,7 +58,7 @@ class CorrespondenceEntityView(viewsets.ViewSet):
 
     def list(self, request, format=None):
 
-        if request.GET.get('reference') and request.GET.get('gn'):
+        if request.GET.get('osm') and request.GET.get('gn'):
             try:
                 correspondence = CorrespondenceEntity.objects.get(reference_osm=int(request.GET.get('osm')),
                                                                   reference_gn=int(request.GET.get('gn')))
@@ -67,9 +67,28 @@ class CorrespondenceEntityView(viewsets.ViewSet):
 
             except CorrespondenceEntity.DoesNotExist:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
+        elif request.GET.get('gn'):
+            try:
+                correspondence = CorrespondenceEntity.objects.get(reference_gn=int(request.GET.get('gn')))
+
+                serializer = CorrespondenceEntitySerializer(correspondence)
+
+            except CorrespondenceEntity.DoesNotExist:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        elif request.GET.get('osm'):
+            try:
+                correspondence = CorrespondenceEntity.objects.get(reference_osm=int(request.GET.get('osm')))
+
+                serializer = CorrespondenceEntitySerializer(correspondence)
+
+            except CorrespondenceEntity.DoesNotExist:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
         else:
             correspondences = CorrespondenceEntity.objects.all()
+            serializer = CorrespondenceEntitySerializer(correspondences, many=True)
             serializer = CorrespondenceEntitySerializer(correspondences, many=True)
 
         return Response(serializer.data)
@@ -114,6 +133,64 @@ class CorrespondenceValideView(viewsets.ViewSet):
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EntityOSMDetails(viewsets.ViewSet):
+    def list(self, request, id, format=None):
+
+        serializer_context = {
+            'request': Request(request),
+        }
+
+        attributes = Node.objects.filter(pk=id)
+        serializer = PointSerializer(attributes, many=True, context=serializer_context)
+        serializer_points = {}
+        serializer_ways = {}
+
+        type = 'NODE'
+
+        if not attributes:
+            attributes = Way.objects.filter(pk=id)
+            serializer = WaySerializer(attributes)
+
+            points = Node.objects.filter(way_reference=id)
+            serializer_points = PointSerializer(points, many=True, context=serializer_context).data
+            serializer_ways = {}
+
+            type = 'WAY'
+
+        if not attributes:
+            attributes = Relation.objects.filter(pk=id)
+            serializer = RelationSerializer(attributes, many=True)
+
+            points = Node.objects.filter(relation_reference=id)
+            serializer_points = PointSerializer(points, many=True, context=serializer_context).data
+
+            ways = Way.objects.filter(relation_reference=id)
+            serializer_ways = WaySerializer(ways, many=True, context=serializer_context).data
+
+            type = 'RELATION'
+
+        if not attributes:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        serializer_tag = {}
+        try:
+
+            tag_list = Tag.objects.filter(reference=id)
+            serializer_tag = TagSerializer(tag_list, many=True)
+        except Tag.DoesNotExist:
+            pass
+
+        entity = {
+            'type': type,
+            'attributes': serializer.data,
+            'serializer_points': serializer_points,
+            'serializer_ways': serializer_ways,
+            'tag_list': serializer_tag.data
+        }
+
+        return Response(entity, status=status.HTTP_200_OK)
 
 
 class CorrespondenceInvalideView(viewsets.ViewSet):
