@@ -22,7 +22,7 @@ class Command(BaseCommand):
             help="The geoname id for made the matching with osm entities.")
 
     def handle(self, geoname_id, *args, **options):
-        #try:
+        try:
 
             gn_entity = Geoname.objects.get(pk=geoname_id[0])
             entite = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
@@ -68,5 +68,5 @@ class Command(BaseCommand):
 
                 correspondence.save()
 
-        #except Exception as error:
-        #    raise CommandError(error)
+        except Exception as error:
+            raise CommandError(error)

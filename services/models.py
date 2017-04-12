@@ -95,22 +95,22 @@ class CorrespondenceEntity(models.Model):
     reference_osm = models.BigIntegerField()
 
     # geonames attributes
-    gn_feature_class = models.CharField(max_length=1)
-    gn_feature_code = models.CharField(max_length=10)
-    gn_latitude = models.DecimalField(decimal_places=7, max_digits=11)
-    gn_longitude = models.DecimalField(decimal_places=7, max_digits=11)
+    gn_feature_class = models.CharField(max_length=1, default='')
+    gn_feature_code = models.CharField(max_length=10, default='')
+    gn_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
+    gn_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
     # osm attributes
-    osm_name = models.CharField(max_length=300)
-    osm_key_type = models.CharField(max_length=50)
-    osm_value_type = models.CharField(max_length=300)
-    osm_latitude = models.DecimalField(decimal_places=7, max_digits=11)
-    osm_longitude = models.DecimalField(decimal_places=7, max_digits=11)
+    osm_name = models.CharField(max_length=300, default='')
+    osm_key_type = models.CharField(max_length=50, default='')
+    osm_value_type = models.CharField(max_length=300, default='')
+    osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
+    osm_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
-    name_levenshtein = models.DecimalField(decimal_places=3, max_digits=4)
-    type_matching = models.DecimalField(decimal_places=3, max_digits=4)
+    name_levenshtein = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    type_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
-    pertinence_score = models.DecimalField(decimal_places=3, max_digits=4)
+    pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, default=0, null=True)
 
     class Meta:
         unique_together = ('reference_gn', 'reference_osm')
@@ -122,22 +122,22 @@ class CorrespondenceValide(models.Model):
     reference_osm = models.BigIntegerField()
 
     # geonames attributes
-    gn_feature_class = models.CharField(max_length=1)
-    gn_feature_code = models.CharField(max_length=10)
-    gn_latitude = models.DecimalField(decimal_places=7, max_digits=11)
-    gn_longitude = models.DecimalField(decimal_places=7, max_digits=11)
+    gn_feature_class = models.CharField(max_length=1, default='')
+    gn_feature_code = models.CharField(max_length=10, default='')
+    gn_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
+    gn_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
     # osm attributes
-    osm_name = models.CharField(max_length=300)
-    osm_key_type = models.CharField(max_length=50)
-    osm_value_type = models.CharField(max_length=300)
-    osm_latitude = models.DecimalField(decimal_places=7, max_digits=11)
-    osm_longitude = models.DecimalField(decimal_places=7, max_digits=11)
+    osm_name = models.CharField(max_length=300, default='')
+    osm_key_type = models.CharField(max_length=50, default='')
+    osm_value_type = models.CharField(max_length=300, default='')
+    osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
+    osm_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
-    name_levenshtein = models.DecimalField(decimal_places=3, max_digits=4, null=True)
-    type_matching = models.DecimalField(decimal_places=3, max_digits=4, null=True)
+    name_levenshtein = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    type_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
-    pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, null=True)
+    pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, default=0, null=True)
     date_validation = models.DateTimeField(auto_now_add=True, blank=True)
 
     class Meta:
@@ -150,22 +150,22 @@ class CorrespondenceInvalide(models.Model):
     reference_osm = models.BigIntegerField()
 
     # geonames attributes
-    gn_feature_class = models.CharField(max_length=1)
-    gn_feature_code = models.CharField(max_length=10)
-    gn_latitude = models.DecimalField(decimal_places=7, max_digits=11)
-    gn_longitude = models.DecimalField(decimal_places=7, max_digits=11)
+    gn_feature_class = models.CharField(max_length=1, default='')
+    gn_feature_code = models.CharField(max_length=10, default='')
+    gn_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
+    gn_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
     # osm attributes
-    osm_name = models.CharField(max_length=300)
-    osm_key_type = models.CharField(max_length=50)
-    osm_value_type = models.CharField(max_length=300)
-    osm_latitude = models.DecimalField(decimal_places=7, max_digits=11)
-    osm_longitude = models.DecimalField(decimal_places=7, max_digits=11)
+    osm_name = models.CharField(max_length=300, default='')
+    osm_key_type = models.CharField(max_length=50, default='')
+    osm_value_type = models.CharField(max_length=300, default='')
+    osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
+    osm_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
-    name_levenshtein = models.DecimalField(decimal_places=3, max_digits=4, null=True)
-    type_matching = models.DecimalField(decimal_places=3, max_digits=4, null=True)
+    name_levenshtein = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    type_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
-    pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, null=True)
+    pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, default=0, null=True)
     date_validation = models.DateTimeField(auto_now_add=True, blank=True)
 
     class Meta:
