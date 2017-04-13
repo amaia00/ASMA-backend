@@ -63,24 +63,24 @@ class CorrespondenceEntityView(viewsets.ViewSet):
                 correspondence = CorrespondenceEntity.objects.get(reference_osm=int(request.GET.get('osm')),
                                                                   reference_gn=int(request.GET.get('gn')))
 
-                serializer = CorrespondenceEntitySerializer(correspondence)
+                serializer = CorrespondenceEntitySerializer(correspondence, many=True)
 
             except CorrespondenceEntity.DoesNotExist:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         elif request.GET.get('gn'):
             try:
-                correspondence = CorrespondenceEntity.objects.get(reference_gn=int(request.GET.get('gn')))
+                correspondence = CorrespondenceEntity.objects.filter(reference_gn=int(request.GET.get('gn')))
 
-                serializer = CorrespondenceEntitySerializer(correspondence)
+                serializer = CorrespondenceEntitySerializer(correspondence, many=True)
 
             except CorrespondenceEntity.DoesNotExist:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
         elif request.GET.get('osm'):
             try:
-                correspondence = CorrespondenceEntity.objects.get(reference_osm=int(request.GET.get('osm')))
+                correspondence = CorrespondenceEntity.objects.filter(reference_osm=int(request.GET.get('osm')))
 
-                serializer = CorrespondenceEntitySerializer(correspondence)
+                serializer = CorrespondenceEntitySerializer(correspondence, many=True)
 
             except CorrespondenceEntity.DoesNotExist:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -88,7 +88,6 @@ class CorrespondenceEntityView(viewsets.ViewSet):
 
         else:
             correspondences = CorrespondenceEntity.objects.all()
-            serializer = CorrespondenceEntitySerializer(correspondences, many=True)
             serializer = CorrespondenceEntitySerializer(correspondences, many=True)
 
         return Response(serializer.data)

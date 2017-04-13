@@ -22,7 +22,7 @@ class Command(BaseCommand):
             help="The geoname id for made the matching with osm entities.")
 
     def handle(self, geoname_id, *args, **options):
-        # try:
+        try:
 
             gn_entity = Geoname.objects.get(pk=geoname_id[0])
             entite = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
@@ -30,11 +30,6 @@ class Command(BaseCommand):
                                     feature_code=gn_entity.fcode)
 
             list_block_entities = blocking_function(entite)
-
-            # print("HASTA QUIIIIII----------------------------------------")
-            print(list_block_entities)
-            # print("HASTA QUIIIIII----------------------------------------")
-
             list_align_entities = align_algorithme(entite, list_block_entities)
 
             print("List d'entités alignées")
@@ -48,7 +43,8 @@ class Command(BaseCommand):
                 print("type_matching", entity['type_matching'])
                 print("levenshtein_distance", entity['levenshtein_distance'])
 
-                print("type_tag_osm ", getattr(entity['type_tag_osm'],"key", ''), getattr(entity['type_tag_osm'], 'value', ''))
+                print("type_tag_osm ", getattr(entity['type_tag_osm'], "key", ''),
+                      getattr(entity['type_tag_osm'], 'value', ''))
 
                 print("Tag list")
                 print(print_tags(entity['tag_list']))
@@ -59,7 +55,9 @@ class Command(BaseCommand):
 
                 (latitude_osm, longitude_osm) = entity['coordinates_osm']
 
-                gn_name_type = FeatureCode.objects.filter(code=gn_entity.fclass + '.' + gn_entity.fcode).values('name')[0]['name']
+                gn_name_type = \
+                FeatureCode.objects.filter(code=gn_entity.fclass + '.' + gn_entity.fcode).values('name')[0]['name']
+
                 correspondence = CorrespondenceEntity(reference_gn=gn_entity.id, reference_osm=entity['entity_osm'].id,
                                                       gn_name=gn_entity.name,
                                                       gn_feature_class=gn_entity.fclass,
@@ -79,5 +77,5 @@ class Command(BaseCommand):
 
                 correspondence.save()
 
-        # except Exception as error:
-        #     raise CommandError(error)
+        except Exception as error:
+            raise CommandError(error)
