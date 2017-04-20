@@ -25,6 +25,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         try:
             print("The process begin")
+
             gn = Geoname.objects.get(pk=3041471)
             point1 = GeoLocation.from_degrees(gn.latitude, gn.longitude)
 
@@ -35,7 +36,6 @@ class Command(BaseCommand):
 
             print("Distance:::")
             print(distance)
-
 
         except Exception as error:
             raise CommandError(error)

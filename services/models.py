@@ -238,7 +238,6 @@ class CorrespondenceTypesClose(models.Model):
 
     osm_key = models.CharField(max_length=50)
     osm_value = models.CharField(max_length=300)
-    description = models.CharField(max_length=500, null=True)
 
     class Meta:
         unique_together = ('gn_feature_class', 'gn_feature_code', 'osm_key', 'osm_value')

@@ -25,7 +25,6 @@ class Command(BaseCommand):
 
     def handle(self, geoname_id, *args, **options):
         try:
-
             gn_entity = Geoname.objects.get(pk=geoname_id[0])
             entite = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
                                     longitude=gn_entity.longitude, feature_class=gn_entity.fclass,
