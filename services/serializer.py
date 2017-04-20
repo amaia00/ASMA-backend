@@ -90,4 +90,4 @@ class CorrespondenceTypesSerializer(serializers.HyperlinkedModelSerializer):
 class CorrespondenceTypesCloseSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = CorrespondenceTypesClose
-        fields = ('id', 'gn_feature_class', 'gn_feature_code', 'osm_key', 'osm_value')
+        fields = ('id', 'gn_feature_class', 'gn_feature_code', 'osm_key', 'osm_value',)

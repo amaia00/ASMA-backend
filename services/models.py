@@ -1,5 +1,5 @@
 from django.db import models
-from datetime import datetime
+from django.utils import timezone
 
 __author__ = 'Amaia Nazábal'
 
@@ -238,6 +238,5 @@ class CorrespondenceTypesClose(models.Model):
 
     osm_key = models.CharField(max_length=50)
     osm_value = models.CharField(max_length=300)
+    date_validation = models.DateTimeField(blank=False, default=timezone.now)
 
-    class Meta:
-        unique_together = ('gn_feature_class', 'gn_feature_code', 'osm_key', 'osm_value')
