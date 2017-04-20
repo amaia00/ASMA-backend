@@ -6,12 +6,7 @@
 #!/usr/bin/env python3
 from django.core.management.base import BaseCommand, CommandError
 from services.algorithms.geolocation import GeoLocation
-from services.models import Geoname, CorrespondenceEntity, Node
-from services.classes.classes import EntityGeoNames
-from services.algorithms.algorithm_blocking import blocking_function
-from services.algorithms.algorithm_align import align_algorithme
-from services.algorithms.pertinence_score import get_pertinence_score
-from util.util import print_tags
+from services.models import Geoname, Node
 
 __author__ = 'Amaia Nazabal'
 

@@ -4,12 +4,13 @@ from rest_framework import status
 from rest_framework.response import Response
 from .permissions import ReadOnlyPermission
 from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geoname, \
-    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide
+    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence
 from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationSerializer, \
     CorrespondenceValideSerializer, CorrespondenceEntitySerializer, ParameterSerializer, GeonameSerializer,\
     FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
-    CorrespondenceInvalideSerializer
+    CorrespondenceInvalideSerializer, ParametersScorePertinenceSerializer
 from rest_framework.request import Request
+from rest_framework.decorators import detail_route
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -52,6 +53,12 @@ class ParametersViewSet(viewsets.ModelViewSet):
     queryset = Parameters.objects.all()
     serializer_class = ParameterSerializer
     permission_classes = (ReadOnlyPermission,)
+
+
+class ParametersScorePertinenceViewSet(viewsets.ModelViewSet):
+    queryset = ParametersScorePertinence.objects.all()
+    serializer_class = ParametersScorePertinenceSerializer
+    # permission_classes = (ReadOnlyPermission,)
 
 
 class CorrespondenceEntityView(viewsets.ViewSet):

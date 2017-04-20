@@ -26,6 +26,7 @@ router.register(r'relations', views.RelationViewSet)
 router.register(r'geoname', views.GeonameViewSet)
 router.register(r'feature-code', views.FeatureCodeViewSet)
 router.register(r'parameters', views.ParametersViewSet)
+router.register(r'parameters-score-pertinence', views.ParametersScorePertinenceViewSet)
 router.register(r'entity-osm-details/(?P<id>.+)/$', views.EntityOSMDetails, base_name='entity-osm-details')
 
 router.register(r'correspondence', views.CorrespondenceEntityView, base_name='correspondence')

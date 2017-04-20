@@ -102,6 +102,7 @@ class CorrespondenceEntity(models.Model):
     gn_feature_name = models.CharField(max_length=200, default='')
     gn_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     gn_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
+    gn_type = models.CharField(choices=STRUCTURE_TYPE, default='NODE', max_length=10)
 
     # osm attributes
     osm_name = models.CharField(max_length=300, default='')
@@ -111,8 +112,9 @@ class CorrespondenceEntity(models.Model):
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     osm_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
-    name_levenshtein = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    name_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
     type_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    coordinates_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
     pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, default=0, null=True)
     date_matching = models.DateTimeField(auto_now_add=True, blank=True)
@@ -133,6 +135,7 @@ class CorrespondenceValide(models.Model):
     gn_feature_name = models.CharField(max_length=200, default='')
     gn_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     gn_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
+    gn_type = models.CharField(choices=STRUCTURE_TYPE, default='NODE', max_length=10)
 
     # osm attributes
     osm_name = models.CharField(max_length=300, default='')
@@ -142,8 +145,9 @@ class CorrespondenceValide(models.Model):
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     osm_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
-    name_levenshtein = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    name_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
     type_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    coordinates_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
     pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, default=0, null=True)
     date_validation = models.DateTimeField(auto_now_add=True, blank=True)
@@ -164,6 +168,7 @@ class CorrespondenceInvalide(models.Model):
     gn_feature_name = models.CharField(max_length=200, default='')
     gn_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     gn_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
+    gn_type = models.CharField(choices=STRUCTURE_TYPE, default='NODE', max_length=10)
 
     # osm attributes
     osm_name = models.CharField(max_length=300, default='')
@@ -173,14 +178,33 @@ class CorrespondenceInvalide(models.Model):
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     osm_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
-    name_levenshtein = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    name_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
     type_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    coordinates_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
     pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, default=0, null=True)
-    date_validation = models.DateTimeField(auto_now_add=True, blank=True)
+    date_invalidation = models.DateTimeField(auto_now_add=True, blank=True)
 
     class Meta:
         unique_together = ('reference_gn', 'reference_osm')
+
+
+class ParametersScorePertinence(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50)
+    value = models.CharField(max_length=200)
+    active = models.BooleanField(default=True)
+    description = models.CharField(max_length=200)
+
+    osm_key_type = models.CharField(max_length=50, default='', null=True)
+    osm_value_type = models.CharField(max_length=300, default='', null=True)
+    gn_feature_class = models.CharField(max_length=1, default='', null=True)
+    gn_feature_code = models.CharField(max_length=10, default='', null=True)
+
+    all_types = models.BooleanField(default=True, null=False)
+
+    class Meta:
+        unique_together = ('name', 'osm_key_type', 'osm_value_type', 'gn_feature_class', 'gn_feature_code', 'all_types')
 
 
 class Parameters(models.Model):

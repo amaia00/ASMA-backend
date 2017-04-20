@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Node, Tag, Way, Relation, Parameters, CorrespondenceEntity, CorrespondenceValide, Geoname, \
-    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide
+    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence
 
 
 class TagSerializer(serializers.HyperlinkedModelSerializer):
@@ -47,7 +47,7 @@ class CorrespondenceEntitySerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'reference_gn', 'reference_osm',
                   'gn_name', 'gn_feature_class', 'gn_feature_code', 'gn_feature_name', 'gn_latitude', 'gn_longitude',
                   'osm_name', 'osm_key_type', 'osm_value_type', 'osm_latitude', 'osm_longitude', 'osm_type',
-                  'name_levenshtein', 'type_matching', 'pertinence_score')
+                  'name_matching', 'type_matching', 'coordinates_matching', 'pertinence_score')
 
 
 class CorrespondenceValideSerializer(serializers.HyperlinkedModelSerializer):
@@ -56,7 +56,7 @@ class CorrespondenceValideSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'reference_gn', 'reference_osm',
                   'gn_name', 'gn_feature_class', 'gn_feature_code', 'gn_feature_name', 'gn_latitude', 'gn_longitude',
                   'osm_name', 'osm_key_type', 'osm_value_type', 'osm_latitude', 'osm_longitude', 'osm_type',
-                  'name_levenshtein', 'type_matching', 'pertinence_score', 'date_validation')
+                  'name_matching', 'type_matching', 'coordinates_matching', 'pertinence_score', 'date_validation')
 
 
 class CorrespondenceInvalideSerializer(serializers.HyperlinkedModelSerializer):
@@ -65,13 +65,20 @@ class CorrespondenceInvalideSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'reference_gn', 'reference_osm',
                   'gn_name', 'gn_feature_class', 'gn_feature_code', 'gn_feature_name', 'gn_latitude', 'gn_longitude',
                   'osm_name', 'osm_key_type', 'osm_value_type', 'osm_latitude', 'osm_longitude', 'osm_type',
-                  'name_levenshtein', 'type_matching', 'pertinence_score', 'date_validation')
+                  'name_matching', 'type_matching', 'coordinates_matching', 'pertinence_score', 'date_validation')
 
 
 class ParameterSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Parameters
         fields = ('id', 'name', 'value', 'description')
+
+
+class ParametersScorePertinenceSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = ParametersScorePertinence
+        fields = ('id', 'name', 'value', 'description', 'osm_key_type', 'osm_value_type', 'gn_feature_class',
+                  'gn_feature_code', 'all_types')
 
 
 class CorrespondenceTypesSerializer(serializers.HyperlinkedModelSerializer):

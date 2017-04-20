@@ -117,7 +117,6 @@ def get_object_in_ratio(entity, ratio):
     We reduce the list for erase entities duplicates
     Control cut
     """
-
     for entity_l in entities_list:
 
         (latitude, longitude) = entity_l['coordinates']
@@ -129,10 +128,9 @@ def get_object_in_ratio(entity, ratio):
             '''
             (lat_before, long_before) = coordinates
 
-            if coordinates and loc.distance_to(GeoLocation.from_degrees(lat_before, long_before)) > loc.distance_to(
+            if coordinates and loc.distance_to(GeoLocation.from_degrees(lat_before, long_before)) >= loc.distance_to(
                     GeoLocation.from_degrees(latitude, longitude)):
 
-                print("OBJETO QUE QUEREMOS ELIMINAR")
                 print({
                     'id': id,
                     'coordinates': coordinates
@@ -143,14 +141,16 @@ def get_object_in_ratio(entity, ratio):
                     'coordinates': coordinates
                 })
                 final_list.append(entity_l)
+                coordinates = (latitude, longitude)
+                id = entity_l['id']
+
         else:
             '''
             If it's another entity
             '''
             final_list.append(entity_l)
 
-
-        coordinates = (latitude, longitude)
-        id = entity_l['id']
+            coordinates = (latitude, longitude)
+            id = entity_l['id']
 
     return final_list

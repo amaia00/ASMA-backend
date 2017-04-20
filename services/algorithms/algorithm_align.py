@@ -40,7 +40,7 @@ def align_algorithme(entity_gn, list_entitys_osm):
                     'shape_osm': entity_osm.get('shape_osm'),
                     'coordinates_osm': entity_osm.get('coordinates'),
                     'tag_list': entity_osm.get('tag_list'),
-                    'levenshtein_distance': matching_name_level,
+                    'name_matching': matching_name_level,
                     'type_matching': matching_type_level,
                     'type_tag_osm': type_tag_osm
                 })
