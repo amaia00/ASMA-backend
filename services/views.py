@@ -245,4 +245,4 @@ class CorrespondenceTypesViewSet(viewsets.ModelViewSet):
 class CorrespondenceTypesCloseViewSet(viewsets.ModelViewSet):
     queryset = CorrespondenceTypesClose.objects.all()
     serializer_class = CorrespondenceTypesCloseSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+    #permission_classes = (permissions.IsAuthenticatedOrReadOnly, )

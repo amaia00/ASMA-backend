@@ -5,11 +5,13 @@ __author__ = 'Amaia Nazábal'
 
 NODE = 'NODE'
 WAY = 'WAY'
+AREA = 'AREA'
 RELATION = 'RELATION'
 
 STRUCTURE_TYPE = (
     (NODE, 'NODE'),
     (WAY, 'WAY'),
+    (AREA, 'AREA'),
     (RELATION, 'RELATION')
 )
 

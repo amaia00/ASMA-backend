@@ -8,17 +8,21 @@ def has_name(tag):
     return tag.key == 'name' or tag.key == 'name:en'
 
 
-def get_name(tags):
+def get_name_shape(tags):
     """
 
     :param tags:
     :return:
     """
+    shape = False
+    name = False
     for tag in tags:
         if has_name(tag):
-            return tag.value
+            name = tag.value
+        if tag.key == 'area' and tag.value == 'yes':
+            shape = 'AREA'
 
-    return False
+    return name, shape
 
 
 def remove_tag_name(tags):

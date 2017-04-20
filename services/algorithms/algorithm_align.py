@@ -1,7 +1,7 @@
 import requests, json
 from services.models import Parameters, CorrespondenceTypes, CorrespondenceTypesClose, FeatureCode
 from util.string_matching import distance_levenshtein
-from util.util import get_name, remove_tag_name, print_tags
+from util.util import get_name_shape, remove_tag_name, print_tags
 
 
 def align_algorithme(entity_gn, list_entitys_osm):
@@ -18,7 +18,7 @@ def align_algorithme(entity_gn, list_entitys_osm):
         print("DEBUG===================================================")
         print(entity_osm)
 
-        name = get_name(entity_osm.get('tag_list'))
+        name, shape = get_name_shape(entity_osm.get('tag_list'))
 
         # TODO: avoid import if the noeud doesn't have the tag name
         if name:
@@ -36,8 +36,8 @@ def align_algorithme(entity_gn, list_entitys_osm):
                 """
                 list_aligned_entities.append({
                     'name_osm': name,
+                    'shape_osm' : shape or entity_osm.get('shape_osm'),
                     'entity_osm': entity_osm.get('entity_osm'),
-                    'shape_osm': entity_osm.get('shape_osm'),
                     'coordinates_osm': entity_osm.get('coordinates'),
                     'tag_list': entity_osm.get('tag_list'),
                     'name_matching': matching_name_level,
