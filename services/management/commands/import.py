@@ -5,7 +5,6 @@ from services.models import Relation, Tag, Node, Way, Geoname, FeatureCode, RELA
 import xml.etree.ElementTree as ET
 from datetime import datetime
 
-__author__ = 'Amaia Nazabal'
 
 
 class Command(BaseCommand):
@@ -104,16 +103,16 @@ class Command(BaseCommand):
                 raise CommandError('The file %s doesn\'t exists' % file)
             except IndexError as detail:
                 print(detail)
-                raise CommandError('Les fields n\'ont pas la même structure.')
+                raise CommandError('Les fields n\'ont pas la meme structure.')
 
 
 def geoname_importation(file):
-    """
-    This method execute the importation of geonames points.
-    Read all the file and save every entity in the database
-    :param file:
-    :return:
-    """
+
+    #This method execute the importation of geonames points.
+    #Read all the file and save every entity in the database
+    #:param file:
+    #:return:
+
     print("%s INFO: Importation points geographiques." % datetime.now())
 
     file_object = open(file, 'r')
@@ -169,7 +168,7 @@ def nodes_importation(root):
 
         for xml_tag in xml_point.findall('tag'):
             """
-            On vérifie que le tag soit écrit en anglais et sinon, c'est pas nécessaire
+            On verifie que le tag soit ecrit en anglais et sinon, c'est pas necessaire
             de le garder dans la BD
             """
             if not another_language(xml_tag.get('k')):

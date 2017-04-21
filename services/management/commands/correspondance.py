@@ -33,7 +33,7 @@ class Command(BaseCommand):
             list_block_entities = blocking_function(entite)
             list_align_entities = align_algorithme(entite, list_block_entities)
 
-            print("List d'entités alignées")
+            print("List d'entites alignees")
             print("==========================================================")
 
             for entity in list_align_entities:

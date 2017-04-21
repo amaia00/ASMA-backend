@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
-__author__ = 'Amaia Nazábal'
+__author__ = 'Amaia Nazabal'
 
 NODE = 'NODE'
 WAY = 'WAY'

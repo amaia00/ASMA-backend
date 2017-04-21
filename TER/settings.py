@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'services',
-    'rest_framework',
     'corsheaders',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -51,9 +51,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 USE_ETAGS = True
+CORS_ORIGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = 'TER.urls'
 
@@ -82,7 +85,7 @@ WSGI_APPLICATION = 'TER.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'TER',
+        'NAME': 'TER3',
         'USER': 'admin',
         'PASSWORD': 'admin123',
         'HOST': 'localhost',

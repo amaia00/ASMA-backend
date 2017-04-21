@@ -4,15 +4,15 @@ from ngram import NGram
 
 def distance_levenshtein(source_string, comparaison_string):
     """
-    Cette méthode calcule le porcentage de matching en utilisant la fonction de
+    Cette methode calcule le porcentage de matching en utilisant la fonction de
     levenshtein
 
-    - La distance de levenshtein messure la difference entre deux chaînes en calculant la quantité
-    des operations qu'on doit faire au minimun pour transformer une chaîne dans l'autre.
+    - La distance de levenshtein messure la difference entre deux chaines en calculant la quantite
+    des operations qu'on doit faire au minimun pour transformer une chaine dans l'autre.
     - La distance de levenshtein est toujours au plus la taille du mot plus grand
 
-    :param source_string: le chaîne de caractères qu'on veut comparer
-    :param comparaison_string: une autre chaîne de caractères
+    :param source_string: le chaine de caracteres qu'on veut comparer
+    :param comparaison_string: une autre chaine de caracteres
     :return: le porcentage de matching
     """
     max_distance = max(len(source_string), len(comparaison_string))
@@ -23,28 +23,28 @@ def distance_levenshtein(source_string, comparaison_string):
 
 def distance_ngrames(source_string, comparaison_string):
     """
-    Cette méthode retourne le dégré de similarité entre deux chaînes en utilisant le méthode
+    Cette methode retourne le degre de similarite entre deux chaines en utilisant le methode
     ngram, avec le valeur de N=2
 
-    - La méthode de bigrame fait une combination à deux des caractères sequentiels de chaque
-    chaîne, et après compare les couples entre elles pour savoir le niveau du matching
-    :param source_string: le chaîne de caractères qu'on veut comparer
-    :param comparaison_string: une autre chaîne de caractères
-    :return: le porcentage de matching
+    - La methode de bigrame fait une combination a deux des caracteres sequentiels de chaque
+    chaine, et apres compare les couples entre elles pour savoir le niveau du matching
+    :param source_string: le chaine de caracteres qu'on veut comparer
+    :param comparaison_string: une autre chaine de caracteres
+    :return: le pourcentage de matching
     """
     return NGram.compare(source_string.lower(), comparaison_string.lower(), N=2)
 
 
 def distance_jaro(source_string, comparaison_string):
     """
-    Cette méthode retourne le degré de similarité en appliquant la méthode de Jaro Winkler.
+    Cette methode retourne le degre de similarite en appliquant la methode de Jaro Winkler.
 
-    - La méthode de Jaro Winkler, utilise les traspositions sur las lettres différents et la
-    taille des mots pour calculer la similarité.
+    - La methode de Jaro Winkler, utilise les transpositions sur las lettres differents et la
+    taille des mots pour calculer la similarite.
 
-    :param source_string: le chaîne de caractères qu'on veut comparer
-    :param comparaison_string: une autre chaîne de caractères
-    :return: le porcentage de matching
+    :param source_string: le chaine de caracteres qu'on veut comparer
+    :param comparaison_string: une autre chaine de caracteres
+    :return: le pourcentage de matching
     """
     return jaro_winkler(source_string, comparaison_string)
 

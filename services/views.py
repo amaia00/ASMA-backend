@@ -1,5 +1,5 @@
 from rest_framework import views, viewsets, permissions
-from services.api.geonames import search_entity
+#from services.api.geonames import search_entity
 from rest_framework import status
 from rest_framework.response import Response
 from .permissions import ReadOnlyPermission

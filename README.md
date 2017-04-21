@@ -17,7 +17,10 @@ Execute test algo
 
 
 Execute osm importation
-./manage.py import TER/xml_files/andorra-latest.xml  --skip-geonames
+
+
+Run server
+python manage.py runserver
 
 
 Execute geonames importation
