@@ -7,6 +7,7 @@ from services.algorithms.algorithm_align import align_algorithme
 from services.algorithms.pertinence_score import get_pertinence_score
 from services.classes.classes import PositionGPS
 from util.util import print_tags
+from util.functions import update_correspondence_osm
 from util.coordinates_matching import matching_coordinates
 
 __author__ = 'Amaia Nazabal'
@@ -26,29 +27,13 @@ class Command(BaseCommand):
     def handle(self, geoname_id, *args, **options):
         try:
             gn_entity = Geoname.objects.get(pk=geoname_id[0])
-            entite = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
+            entity = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
                                     longitude=gn_entity.longitude, feature_class=gn_entity.fclass,
                                     feature_code=gn_entity.fcode)
 
-            list_block_entities = blocking_function(entite)
-            list_align_entities = align_algorithme(entite, list_block_entities)
-
-            print("List d'entités alignées")
-            print("==========================================================")
-
+            list_block_entities = blocking_function(entity)
+            list_align_entities = align_algorithme(entity, list_block_entities)
             for entity in list_align_entities:
-                print("\n")
-                print("Entity OSM: ", entity['entity_osm'].id)
-                print("----------------------------------------")
-                print(entity['entity_osm'])
-                print("type_matching ", entity['type_matching'])
-                print("name_matching ", entity['name_matching'])
-
-                print("type_tag_osm ", getattr(entity['type_tag_osm'], "key", ''),
-                      getattr(entity['type_tag_osm'], 'value', ''))
-
-                print("Tag list")
-                print(print_tags(entity['tag_list']))
 
                 (latitude_osm, longitude_osm) = entity['coordinates_osm']
 
@@ -72,7 +57,7 @@ class Command(BaseCommand):
                                                       gn_longitude=gn_entity.longitude,
                                                       gn_type=NODE,
                                                       osm_name=entity['name_osm'],
-                                                      osm_type=entity['shape_osm'],
+                                                      osm_shape=entity['shape_osm'],
                                                       osm_key_type=getattr(entity['type_tag_osm'], 'key', ''),
                                                       osm_value_type=getattr(entity['type_tag_osm'], 'value', ''),
                                                       osm_latitude=latitude_osm,
@@ -83,6 +68,12 @@ class Command(BaseCommand):
                                                       pertinence_score=pertinence_score)
 
                 correspondence.save()
+                update_correspondence_osm(entity['entity_osm'].id, entity['shape_osm'])
+
+            gn_entity.correspondence_check = True
+            gn_entity.save()
+
+            print("Quantite de matchs: ", len(list_align_entities))
 
         except Exception as error:
             raise CommandError(error)

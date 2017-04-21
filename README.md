@@ -13,15 +13,15 @@ FLUSH PRIVILEGES;
 ./manage.py migrate
 
 Execute test algo
-./manage.py import --skip-geonames --skip-osm  ""
+./manage.py importation --skip-geonames --skip-osm  ""
 
 
 Execute osm importation
-./manage.py import TER/xml_files/andorra-latest.xml  --skip-geonames
+./manage.py importation TER/xml_files/andorra-latest.xml  --skip-geonames
 
 
 Execute geonames importation
-./manage.py import TER/xml_files/AD.txt  --skip-osm -file3 TER/xml_files/featureCodes_en.txt 
+./manage.py importation TER/xml_files/AD.txt  --skip-osm -file3 TER/xml_files/featureCodes_en.txt 
 
 
 ./manage.py correspondance 8224609

@@ -1,49 +1,44 @@
-import requests, json
+import json
+import requests
+
 from services.models import Parameters, CorrespondenceTypes, CorrespondenceTypesClose, FeatureCode
 from util.string_matching import distance_levenshtein
-from util.util import get_name_shape, remove_tag_name, print_tags
+from util.util import get_name_shape, remove_tag_name
 
 
-def align_algorithme(entity_gn, list_entitys_osm):
+def align_algorithme(entity_gn, list_block_osm_entities):
     """
 
     :param entity_gn:
-    :param list_entitys_osm: avec tag list
+    :param list_block_osm_entities: avec tag list
     :return:
     """
 
     list_aligned_entities = []
 
-    for entity_osm in list_entitys_osm:
-        print("DEBUG===================================================")
-        print(entity_osm)
+    for entity_osm in list_block_osm_entities:
 
-        name, shape = get_name_shape(entity_osm.get('tag_list'))
+        matching_name_level = match_name_string(entity_gn, entity_osm.get('name'))
+        if matching_name_level:
 
-        # TODO: avoid import if the noeud doesn't have the tag name
-        if name:
+            type_tag_osm, matching_type_level = match_type_correspondence(entity_gn, entity_osm.get('tag_list'))
+            if not matching_type_level:
+                type_tag_osm, matching_type_level = match_type_synonyms(entity_gn, entity_osm.get('tag_list'))
 
-            matching_name_level = match_name_string(entity_gn, name)
-            if matching_name_level:
-
-                type_tag_osm, matching_type_level = match_type_correspondence(entity_gn, entity_osm.get('tag_list'))
-                if not matching_type_level:
-                    type_tag_osm, matching_type_level = match_type_synonyms(entity_gn, entity_osm.get('tag_list'))
-
-                """
-                We add to the matched entities list the entities which a level of matching with
-                the name and type matching
-                """
-                list_aligned_entities.append({
-                    'name_osm': name,
-                    'shape_osm' : shape or entity_osm.get('shape_osm'),
-                    'entity_osm': entity_osm.get('entity_osm'),
-                    'coordinates_osm': entity_osm.get('coordinates'),
-                    'tag_list': entity_osm.get('tag_list'),
-                    'name_matching': matching_name_level,
-                    'type_matching': matching_type_level,
-                    'type_tag_osm': type_tag_osm
-                })
+            """
+            We add to the matched entities list the entities which a level of matching with
+            the name and type matching
+            """
+            list_aligned_entities.append({
+                'name_osm': entity_osm.get('name'),
+                'shape_osm': entity_osm.get('shape_osm'),
+                'entity_osm': entity_osm.get('entity_osm'),
+                'coordinates_osm': entity_osm.get('coordinates'),
+                'tag_list': entity_osm.get('tag_list'),
+                'name_matching': matching_name_level,
+                'type_matching': matching_type_level,
+                'type_tag_osm': type_tag_osm
+            })
 
     return list_aligned_entities
 

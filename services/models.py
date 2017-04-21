@@ -39,6 +39,7 @@ class Node(models.Model):
     relation_reference = models.ForeignKey('Relation', on_delete=models.CASCADE,
                                            null=True, blank=True)
     role = models.CharField(max_length=50, null=True)
+    correspondence_check = models.BooleanField(default=False)
 
     class Meta:
         index_together = ['latitude', 'longitude']
@@ -52,6 +53,7 @@ class Way(models.Model):
                                            null=True, blank=True)
 
     role = models.CharField(max_length=50, null=True)
+    correspondence_check = models.BooleanField(default=False)
 
 
 class Relation(models.Model):
@@ -59,6 +61,7 @@ class Relation(models.Model):
     role = models.CharField(max_length=20, null=True)
     relation_reference = models.ForeignKey('Relation', on_delete=models.CASCADE,
                                            null=True, blank=True)
+    correspondence_check = models.BooleanField(default=False)
 
 
 class Geoname(models.Model):
@@ -80,6 +83,7 @@ class Geoname(models.Model):
     gtopo30 = models.IntegerField()
     timezone = models.CharField(max_length=40)
     moddate = models.DateField()
+    correspondence_check = models.BooleanField(default=False)
 
     class Meta:
         index_together = ['latitude', 'longitude']
@@ -108,7 +112,7 @@ class CorrespondenceEntity(models.Model):
 
     # osm attributes
     osm_name = models.CharField(max_length=300, default='')
-    osm_type = models.CharField(choices=STRUCTURE_TYPE, default='', max_length=10)
+    osm_shape = models.CharField(choices=STRUCTURE_TYPE, default='', max_length=10)
     osm_key_type = models.CharField(max_length=50, default='')
     osm_value_type = models.CharField(max_length=300, default='')
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
@@ -141,9 +145,8 @@ class CorrespondenceValide(models.Model):
 
     # osm attributes
     osm_name = models.CharField(max_length=300, default='')
-    osm_type = models.CharField(choices=STRUCTURE_TYPE, default='', max_length=10)
-    osm_key_type = models.CharField(max_length=50, default='')
-    osm_value_type = models.CharField(max_length=300, default='')
+    osm_shape = models.CharField(choices=STRUCTURE_TYPE, default='', max_length=10)
+
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     osm_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
@@ -174,7 +177,7 @@ class CorrespondenceInvalide(models.Model):
 
     # osm attributes
     osm_name = models.CharField(max_length=300, default='')
-    osm_type = models.CharField(choices=STRUCTURE_TYPE, default='', max_length=10)
+    osm_shape = models.CharField(choices=STRUCTURE_TYPE, default='', max_length=10)
     osm_key_type = models.CharField(max_length=50, default='')
     osm_value_type = models.CharField(max_length=300, default='')
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)

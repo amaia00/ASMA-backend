@@ -1,5 +1,7 @@
 from services.algorithms.geolocation import GeoLocation
 from services.models import Parameters, Node, Tag, Relation, Way, NODE, WAY, RELATION
+import operator
+from util.util import get_name_shape
 
 
 def blocking_function(entite):
@@ -11,13 +13,12 @@ def blocking_function(entite):
     """
     list_match_entities = []
     param_distance_ratio = float(Parameters.objects.get(name='distance_ratio').value)
-    shape_list = get_object_in_ratio(entite, param_distance_ratio)
+    list_entities_in_ratio = get_object_in_ratio(entite, param_distance_ratio)
 
-    print("shape list", shape_list)
-    for object in shape_list:
-        reference = object['id']
+    for entity_in_ratio in list_entities_in_ratio:
+        reference = entity_in_ratio['id']
 
-        entity_osm = Node.objects.filter(pk=reference).values()
+        entity_osm = Node.objects.filter(pk=reference)
 
         tag_list = {}
         shape_osm = ''
@@ -50,13 +51,13 @@ def blocking_function(entite):
                     tag_list = Tag.objects.filter(reference=reference, type=WAY)
                     shape_osm = WAY
 
-        if tag_list:
+        name, is_area = get_name_shape(tag_list)
+        if tag_list and name:
             list_match_entities.append({'entity_osm': entity_osm[0],
-                                        'shape_osm': shape_osm,
-                                        'coordinates': object['coordinates'],
+                                        'name': name,
+                                        'shape_osm': is_area or shape_osm,
+                                        'coordinates': entity_in_ratio['coordinates'],
                                         'tag_list': tag_list})
-
-    print("list tag entities", list_match_entities)
 
     return list_match_entities
 
@@ -85,7 +86,7 @@ def get_object_in_ratio(entity, ratio):
     query += "OR " if loc.meridian180_within_distance(ratio) else "AND "
 
     query += "longitude <= %(long_max)s) AND ACOS(SIN(%(lat_loc)s) * SIN(latitude) + COS(%(lat_loc)s) * COS(latitude)" \
-             " * COS(longitude - %(long_loc)s)) <= %(ang_radius)s ORDER BY id"
+             " * COS(longitude - %(long_loc)s)) <= %(ang_radius)s"
 
     params = {
         'lat_min': lat_min,
@@ -98,20 +99,21 @@ def get_object_in_ratio(entity, ratio):
     }
 
     node_list = Node.objects.raw(query, params=params)
-
     entities_list = []
     for node in node_list:
         point = Node.objects.get(pk=node.id)
         shape = point.way_reference_id or point.relation_reference_id or node.id
 
         entities_list.append({
-            'id': shape,
+            'id': int(float(shape)),
             'coordinates': (point.latitude, point.longitude)
         })
 
     id = None
     coordinates = None
     final_list = []
+
+    entities_list.sort(key=operator.itemgetter('id'))
 
     """
     We reduce the list for erase entities duplicates
@@ -131,11 +133,6 @@ def get_object_in_ratio(entity, ratio):
             if coordinates and loc.distance_to(GeoLocation.from_degrees(lat_before, long_before)) >= loc.distance_to(
                     GeoLocation.from_degrees(latitude, longitude)):
 
-                print({
-                    'id': id,
-                    'coordinates': coordinates
-                })
-
                 final_list.remove({
                     'id': id,
                     'coordinates': coordinates
@@ -143,7 +140,6 @@ def get_object_in_ratio(entity, ratio):
                 final_list.append(entity_l)
                 coordinates = (latitude, longitude)
                 id = entity_l['id']
-
         else:
             '''
             If it's another entity

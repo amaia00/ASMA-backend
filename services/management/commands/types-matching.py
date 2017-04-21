@@ -1,7 +1,3 @@
-# TODO: Add the algorithme for retrieved the types correspondences,
-# We have to add a parameter for decide if we have a specfied quantity of match y one type, we have to
-# add in the correspondence type table.
-
 # !/usr/bin/env python3
 from django.core.management.base import BaseCommand, CommandError
 from services.models import CorrespondenceTypes, CorrespondenceTypesClose
@@ -14,15 +10,6 @@ __author__ = 'Amaia Nazabal'
 class Command(BaseCommand):
     help = 'This service allows import all the correspondences between types with a criteria related to the quantity of' \
            'people how maded the correspondences.'
-
-    #
-    # def add_arguments(self, parser):
-    #
-    #     parser.add_argument(
-    #         'geoname_id',
-    #         type=int,
-    #         nargs='+',
-    #         help="The geoname id for made the matching with osm entities.")
 
     def handle(self, *args, **options):
         self.stdout.write(

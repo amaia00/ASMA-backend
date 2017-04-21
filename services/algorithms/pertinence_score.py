@@ -11,7 +11,6 @@ def get_pertinence_score(**kwargs):
     match_name = float(kwargs.get('match_name', 0))
     match_type = float(kwargs.get('match_type', 0))
 
-    print("KWARGS MATCH", kwargs.get('match_geographical_coordinates', 0))
     match_geographical_coordinates = float(kwargs.get('match_geographical_coordinates', 0))
 
     all = False
@@ -40,7 +39,6 @@ def get_pertinence_score(**kwargs):
                                                                           gn_feature_code=gn_feature_code,
                                                                           all_types=all).values('value')[0]['value'])
 
-    print("Poids: ", match_name, match_type)
     match_name_pertinence = match_name * weight_name_matching
     match_type_pertinence = match_type * weight_type_matching
     match_geographical_coordinates_pertinence = match_geographical_coordinates * weight_geographical_coordinates
