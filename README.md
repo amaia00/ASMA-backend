@@ -20,8 +20,11 @@ Execute osm importation
 ./manage.py importation TER/xml_files/andorra-latest.xml  --skip-geonames
 
 
+Run server
+python manage.py runserver
+
 Execute geonames importation
-./manage.py importation TER/xml_files/AD.txt  --skip-osm -file3 TER/xml_files/featureCodes_en.txt 
+./manage.py import TER/xml_files/AD.txt  --skip-osm -file3 TER/xml_files/featureCodes_en.txt 
 
 
 ./manage.py correspondance 8224609
