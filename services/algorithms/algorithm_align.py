@@ -3,7 +3,7 @@ import requests
 
 from services.models import Parameters, CorrespondenceTypes, CorrespondenceTypesClose, FeatureCode
 from util.string_matching import distance_levenshtein
-from util.util import get_name_shape, remove_tag_name
+from util.util import get_name_shape, remove_tag_name, print_tags
 
 
 def align_algorithme(entity_gn, list_block_osm_entities):
@@ -45,8 +45,7 @@ def align_algorithme(entity_gn, list_block_osm_entities):
 
 def match_name_string(entity_gn, osm_name):
     """
-    We check it exists the name tag otherwise, we rejecte the object, and we calculate
-    the levenshtein distance for compare with our param
+    We calculate the levenshtein distance between the osm_name and geonames' names
 
     :param entity_gn:
     :param osm_name:
@@ -54,11 +53,9 @@ def match_name_string(entity_gn, osm_name):
     """
     param_distance_string = float(Parameters.objects.get(name='distance_levenshtein').value)
 
-    if osm_name:
-        value = distance_levenshtein(entity_gn.get_name(), osm_name)
-
-        if value >= param_distance_string:
-            return value
+    value = distance_levenshtein(entity_gn.get_name(), osm_name)
+    if value >= param_distance_string:
+        return value
 
     return False
 
@@ -73,7 +70,7 @@ def match_type_correspondence(entity_gn, tag_list):
     match_level = 0
     tag_match = ''
 
-    match_complete_param = float(Parameters.objects.get(name="match_type_close").value)
+    match_complete_param = float(Parameters.objects.get(name="match_type_complete").value)
     match_close_param = float(Parameters.objects.get(name="match_type_close").value)
 
     tag_list = remove_tag_name(tag_list)
