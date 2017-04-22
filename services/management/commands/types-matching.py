@@ -8,8 +8,8 @@ __author__ = 'Amaia Nazabal'
 
 
 class Command(BaseCommand):
-    help = 'This service allows import all the correspondences between types with a criteria related to the quantity of' \
-           'people how maded the correspondences.'
+    help = 'This service allows import all the correspondences between types with a criteria related to the quantity' \
+           ' of people how made the correspondences.'
 
     def handle(self, *args, **options):
         self.stdout.write(
@@ -39,12 +39,12 @@ class Command(BaseCommand):
                 type_correspondence.save()
 
             self.stdout.write(
-                self.style.SUCCESS('%s : The process ended with %s new correspondences in the valide set.' %
-                                   (datetime.now(), str(len(all)))))
+                '%s : The process ended with %s new correspondences in the valide set...' %
+                (datetime.now(), str(len(all))) + self.style.SUCCESS("OK"))
 
             self.stdout.write(
-                self.style.MIGRATE_LABEL('%s : Correspondences in the set of correspondences closes.' %
-                                         (datetime.now())))
+                self.style.MIGRATE_HEADING('%s : Correspondences in the set of correspondences closes.' %
+                                           (datetime.now())))
 
             cursor.execute("SELECT v.gn_feature_class, v.gn_feature_code, v.osm_key, v.osm_value, COUNT(0) " +
                            "FROM services_correspondencetypesclose v WHERE NOT EXISTS(SELECT st.id FROM " +
@@ -60,11 +60,10 @@ class Command(BaseCommand):
                                                           osm_key=osm_type_key, osm_value=osm_type_value)
                 type_correspondence.save()
                 CorrespondenceTypesClose.objects.filter(gn_feature_code=feature_code, gn_feature_class=feature_class,
-                                                          osm_key=osm_type_key, osm_value=osm_type_value).delete()
+                                                        osm_key=osm_type_key, osm_value=osm_type_value).delete()
 
-            self.stdout.write(
-                self.style.SUCCESS('%s : The process ended with %s new correspondences in the close set.' %
-                                   (datetime.now(), str(len(all)))))
+            self.stdout.write('%s : The process ended with %s new correspondences in the close set....' %
+                              (datetime.now(), str(len(all))) + self.style.SUCCESS("OK"))
 
         except Exception as error:
             raise CommandError(error)

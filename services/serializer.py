@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Node, Tag, Way, Relation, Parameters, CorrespondenceEntity, CorrespondenceValide, Geoname, \
-    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence
+    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, ScheduledWork
 
 
 class TagSerializer(serializers.HyperlinkedModelSerializer):
@@ -56,7 +56,7 @@ class CorrespondenceValideSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'reference_gn', 'reference_osm',
                   'gn_name', 'gn_feature_class', 'gn_feature_code', 'gn_feature_name', 'gn_latitude', 'gn_longitude',
                   'osm_name', 'osm_key_type', 'osm_value_type', 'osm_latitude', 'osm_longitude', 'osm_shape',
-                  'name_matching', 'type_matching', 'coordinates_matching', 'pertinence_score', 'date_validation')
+                  'name_matching', 'type_matching', 'coordinates_matching', 'pertinence_score')
 
 
 class CorrespondenceInvalideSerializer(serializers.HyperlinkedModelSerializer):
@@ -65,7 +65,7 @@ class CorrespondenceInvalideSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'reference_gn', 'reference_osm',
                   'gn_name', 'gn_feature_class', 'gn_feature_code', 'gn_feature_name', 'gn_latitude', 'gn_longitude',
                   'osm_name', 'osm_key_type', 'osm_value_type', 'osm_latitude', 'osm_longitude', 'osm_shape',
-                  'name_matching', 'type_matching', 'coordinates_matching', 'pertinence_score', 'date_validation')
+                  'name_matching', 'type_matching', 'coordinates_matching', 'pertinence_score')
 
 
 class ParameterSerializer(serializers.HyperlinkedModelSerializer):
@@ -91,3 +91,9 @@ class CorrespondenceTypesCloseSerializer(serializers.HyperlinkedModelSerializer)
     class Meta:
         model = CorrespondenceTypesClose
         fields = ('id', 'gn_feature_class', 'gn_feature_code', 'osm_key', 'osm_value',)
+
+
+class ScheduledWorkSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = ScheduledWork
+        fields = ('id', 'name', 'total_rows', 'affected_rows', 'error_rows', 'initial_date', 'final_date')

@@ -3,6 +3,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from services.models import Relation, Tag, Node, Way, Geoname, FeatureCode, RELATION, NODE, WAY
 import xml.etree.ElementTree as ET
+from util.util import get_name_shape
 from datetime import datetime
 
 
@@ -15,7 +16,9 @@ class Command(BaseCommand):
             'file',
             nargs='+',
             metavar="FILE",
-            help="The path of the XML file for the OSM importation")
+            default=False,
+            help="The path of the XML file for the OSM importation"
+        )
 
         parser.add_argument(
             '--file2',
@@ -53,64 +56,78 @@ class Command(BaseCommand):
             help="Skip the features of geonames dump"
         )
 
+        parser.add_argument(
+            '--skip-clean-osm',
+            action='store_true',
+            dest='skip-clean-osm',
+            default=False,
+            help="Skip the clean of entities in osm"
+        )
+
     def handle(self, file, *args, **options):
         """
 
-        :param file:
-        :param args:
-        :param options:
-        :return:
+        :param file: 
+        :param args: 
+        :param options: 
+        :return: 
         """
-        if not options['skip-osm']:
-            for file in file:
-                try:
+        try:
+            if not options['skip-osm']:
+                for file in file:
                     begin_process = datetime.now()
-                    print("===================================")
-                    print("          OSM Importation          ")
-                    print("===================================")
+                    self.stdout.write(
+                        self.style.MIGRATE_LABEL("OSM Importation"))
 
                     tree = ET.parse(file)
                     print("%s INFO: File %s loaded." % (datetime.now(), file))
 
                     root = tree.getroot()
-                    nodes_importation(root=root)
-                    ways_importation(root=root)
-                    relation_importation(root=root)
+                    nodes_importation(self, root=root)
+                    ways_importation(self, root=root)
+                    relation_importation(self, root=root)
 
                     total_time = datetime.now() - begin_process
 
                     self.stdout.write(self.style.SUCCESS('Successfully importation process "%s", '
                                                          'time the execution de %s' % (file,
                                                                                        total_time)))
-                except OSError:
-                    raise CommandError('The file %s doesn\'t exists.' % file)
 
-        if not options['skip-geonames']:
-            print("===================================")
-            print("       GeoNames Importation        ")
-            print("===================================")
+            if not options['skip-geonames']:
+                self.stdout.write(
+                    self.style.MIGRATE_LABEL("GeoNames Importation"))
 
-            try:
                 file = options['file2'] or file[0]
-                geoname_importation(file)
+                geoname_importation(self, file)
 
                 if not options['skip-features']:
                     file = options['file3']
                     features_importation(file)
 
-            except FileNotFoundError:
-                raise CommandError('The file %s doesn\'t exists' % file)
-            except IndexError as detail:
-                print(detail)
-                raise CommandError('Les fields n\'ont pas la meme structure.')
+            if not options['skip-clean-osm']:
+                self.stdout.write(
+                    self.style.MIGRATE_LABEL("Cleaning OSM entities"))
+
+                clean_entities_without_name(self)
+
+        except FileNotFoundError:
+            raise CommandError('The file %s doesn\'t exists' % file)
+
+        except IndexError as detail:
+            print(detail)
+            raise CommandError('Les fields n\'ont pas la meme structure.')
+        except Exception as detail:
+            raise CommandError(detail)
 
 
-def geoname_importation(file):
-
-    #This method execute the importation of geonames points.
-    #Read all the file and save every entity in the database
-    #:param file:
-    #:return:
+def geoname_importation(self, file):
+    """
+    This method execute the importation of geonames points.
+    Read all the file and save every entity in the database
+    
+    :param file: 
+    :return: 
+    """
 
     print("%s INFO: Importation points geographiques." % datetime.now())
 
@@ -133,7 +150,8 @@ def geoname_importation(file):
         geoname.save()
         count += 1
 
-    print("%s INFO: %d entitys imported." % (datetime.now(), count))
+    self.stdout.write(
+        self.style.MIGRATE_HEADING("%s INFO: %d entities imported." % (datetime.now(), count)))
     file_object.close()
 
 
@@ -153,7 +171,7 @@ def features_importation(file):
     file_object.close()
 
 
-def nodes_importation(root):
+def nodes_importation(self, root):
     """
     Importation des noeuds OSM du fichier XML vers la BD relationnel avec ses tags
     :param root: le root du fichier XML pour parcourir l'arbre
@@ -179,12 +197,11 @@ def nodes_importation(root):
             print("%s INFO: %d tags imported." % (datetime.now(),
                                                   len(xml_point.findall('tag'))))
 
-    print("-----------------------------------")
-    print("%s INFO: %d nodes imported." % (datetime.now(), count))
-    print("-----------------------------------")
+    self.stdout.write(
+        self.style.MIGRATE_HEADING("%s INFO: %d nodes imported." % (datetime.now(), count)))
 
 
-def ways_importation(root):
+def ways_importation(self, root):
     """
     Importation des WAYs de OSM, avec ses tags et ses relations avec les noeuds
     :param root: le root du fichier XML pour parcourir l'arbre
@@ -196,6 +213,10 @@ def ways_importation(root):
         way.save()
         count += 1
 
+        for xml_sub_point in xml_way.findall('nd'):
+            Node.objects.filter(pk=xml_sub_point.get('ref')) \
+                .update(way_reference=xml_way.get('id'))
+
         for xml_tag in xml_way.findall('tag'):
             if not another_language(xml_tag.get('k')):
                 tag = Tag(reference=xml_way.get('id'), type=WAY,
@@ -206,20 +227,15 @@ def ways_importation(root):
             print("%s INFO: %d tags imported." % (datetime.now(),
                                                   len(xml_way.findall('tag'))))
 
-        for xml_sub_point in xml_way.findall('nd'):
-            Node.objects.filter(pk=xml_sub_point.get('ref')) \
-                .update(way_reference=xml_way.get('id'))
-
         if len(xml_way.findall('nd')) > 0:
             print("%s INFO: %d noeuds imported." % (datetime.now(),
                                                     len(xml_way.findall('nd'))))
 
-    print("-----------------------------------")
-    print("%s INFO: %d ways imported." % (datetime.now(), count))
-    print("-----------------------------------")
+    self.stdout.write(
+        self.style.MIGRATE_HEADING("%s INFO: %d ways imported." % (datetime.now(), count)))
 
 
-def relation_importation(root):
+def relation_importation(self, root):
     """
     Importation des relations OSM vers la BD relationnel, avec ses tags et membres.
     :param root:
@@ -244,22 +260,84 @@ def relation_importation(root):
             if xml_member.get('type') == 'node':
                 Node.objects.filter(pk=xml_member.get('ref')) \
                     .update(relation_reference=xml_relation.get('id'),
-                            role=xml_relation.get('role'))
+                            role=xml_member.get('role'))
             elif xml_member.get('type') == 'way':
                 Way.objects.filter(pk=xml_member.get('ref')) \
                     .update(relation_reference=xml_relation.get('id'),
-                            role=xml_relation.get('role'))
+                            role=xml_member.get('role'))
             elif xml_member.get('type') == 'relation':
                 Relation.objects.filter(pk=xml_member.get('ref')) \
                     .update(relation_reference=xml_relation.get('id'),
-                            role=xml_relation.get('role'))
+                            role=xml_member.get('role'))
 
         print("%s INFO: %d members imported." % (datetime.now(),
                                                  len(xml_relation.findall('member'))))
 
-    print("-----------------------------------")
-    print("%s INFO: %d relations imported." % (datetime.now(), count))
-    print("-----------------------------------")
+    self.stdout.write(
+        self.style.MIGRATE_HEADING("%s INFO: %d relations imported." % (datetime.now(), count)))
+
+
+def clean_entities_without_name(self):
+    count = 0
+    fathers_nodes = Node.objects.filter(relation_reference__isnull=True, way_reference__isnull=True, checked_name=False)
+    for node in fathers_nodes:
+        tag_list = Tag.objects.filter(reference=node.id)
+        name, _ = get_name_shape(tag_list)
+        if not name:
+            node.delete()
+            count += 1
+    fathers_nodes.update(checked_name=True)
+
+    print("%s INFO: %d nodes deleted." % (datetime.now(), count))
+
+    count = 0
+    count_nodes = 0
+    fathers_ways = Way.objects.filter(relation_reference_id__isnull=True, checked_name=False)
+    for way in fathers_ways:
+        tag_list = Tag.objects.filter(reference=way.id)
+        name, _ = get_name_shape(tag_list)
+        if not name:
+            way.delete()
+            count_nodes += Node.objects.filter(way_reference=way.id).count()
+            Node.objects.filter(way_reference=way.id).delete()
+
+            count += 1
+
+    fathers_ways.update(checked_name=True)
+    print("%s INFO: %d ways deleted." % (datetime.now(), count))
+    print("%s INFO: %d nodes linked to this ways deleted." % (datetime.now(), count_nodes))
+
+    count = 0
+    count_nodes = 0
+    count_ways = 0
+
+    fathers_relations = Relation.objects.filter(relation_reference__isnull=True, checked_name=False)
+    for relation in fathers_relations:
+        tag_list = Tag.objects.filter(reference=relation.id)
+        name, _ = get_name_shape(tag_list)
+
+        if not name:
+            count_nodes += Node.objects.filter(relation_reference=relation.id).count()
+            Node.objects.filter(relation_reference=relation.id).delete()
+
+            ways = Way.objects.filter(relation_reference=relation.id)
+            count_ways += ways.count()
+            Way.objects.filter(relation_reference=relation.id).delete()
+
+            for way in ways:
+                count_nodes += Node.objects.filter(way_reference=way.id).count()
+                Node.objects.filter(way_reference=way.id).delete()
+
+            relation.delete()
+            count += 1
+
+    fathers_relations.update(checked_name=True)
+
+    print("%s INFO: %d relation deleted." % (datetime.now(), count))
+    print("%s INFO: %d ways linked to this relations deleted." % (datetime.now(), count_ways))
+    print("%s INFO: %d nodes linked to this ways deleted." % (datetime.now(), count_nodes))
+
+    self.stdout.write("Process ended ... " + self.style.SUCCESS("OK"))
 
 
 def another_language(key):
@@ -270,7 +348,7 @@ def another_language(key):
     """
     try:
         if key[-3:][:1] != ':' or key[-3:] == ':en' and key[5] != 'name:' or key == 'name:en':
-                return False
+            return False
 
     except IndexError:
         return False

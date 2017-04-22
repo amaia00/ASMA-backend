@@ -4,13 +4,12 @@ from rest_framework import status
 from rest_framework.response import Response
 from .permissions import ReadOnlyPermission
 from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geoname, \
-    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence
+    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, ScheduledWork
 from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationSerializer, \
     CorrespondenceValideSerializer, CorrespondenceEntitySerializer, ParameterSerializer, GeonameSerializer,\
     FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
-    CorrespondenceInvalideSerializer, ParametersScorePertinenceSerializer
+    CorrespondenceInvalideSerializer, ParametersScorePertinenceSerializer, ScheduledWorkSerializer
 from rest_framework.request import Request
-from rest_framework.decorators import detail_route
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -245,4 +244,9 @@ class CorrespondenceTypesViewSet(viewsets.ModelViewSet):
 class CorrespondenceTypesCloseViewSet(viewsets.ModelViewSet):
     queryset = CorrespondenceTypesClose.objects.all()
     serializer_class = CorrespondenceTypesCloseSerializer
-    #permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+
+
+class ScheduledWorkViewSet(viewsets.ModelViewSet):
+    queryset = ScheduledWork.objects.all()
+    serializer_class = ScheduledWorkSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)

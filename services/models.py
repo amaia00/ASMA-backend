@@ -9,10 +9,22 @@ AREA = 'AREA'
 RELATION = 'RELATION'
 
 STRUCTURE_TYPE = (
-    (NODE, 'NODE'),
-    (WAY, 'WAY'),
-    (AREA, 'AREA'),
-    (RELATION, 'RELATION')
+    (NODE, NODE),
+    (WAY, WAY),
+    (AREA, AREA),
+    (RELATION, RELATION)
+)
+
+PENDING = 'PENDING'
+INPROGRESS = 'IN PROGRESS'
+ERROR = 'ERROR'
+FINALIZED = 'FINALIZED'
+
+STRUCTURE_STATES = (
+    (PENDING, PENDING),
+    (INPROGRESS, INPROGRESS),
+    (ERROR, ERROR),
+    (FINALIZED, FINALIZED)
 )
 
 
@@ -39,7 +51,7 @@ class Node(models.Model):
     relation_reference = models.ForeignKey('Relation', on_delete=models.CASCADE,
                                            null=True, blank=True)
     role = models.CharField(max_length=50, null=True)
-    correspondence_check = models.BooleanField(default=False)
+    checked_name = models.BooleanField(default=False)
 
     class Meta:
         index_together = ['latitude', 'longitude']
@@ -53,7 +65,7 @@ class Way(models.Model):
                                            null=True, blank=True)
 
     role = models.CharField(max_length=50, null=True)
-    correspondence_check = models.BooleanField(default=False)
+    checked_name = models.BooleanField(default=False)
 
 
 class Relation(models.Model):
@@ -61,7 +73,7 @@ class Relation(models.Model):
     role = models.CharField(max_length=20, null=True)
     relation_reference = models.ForeignKey('Relation', on_delete=models.CASCADE,
                                            null=True, blank=True)
-    correspondence_check = models.BooleanField(default=False)
+    checked_name = models.BooleanField(default=False)
 
 
 class Geoname(models.Model):
@@ -113,8 +125,8 @@ class CorrespondenceEntity(models.Model):
     # osm attributes
     osm_name = models.CharField(max_length=300, default='')
     osm_shape = models.CharField(choices=STRUCTURE_TYPE, default='', max_length=10)
-    osm_key_type = models.CharField(max_length=50, default='')
-    osm_value_type = models.CharField(max_length=300, default='')
+    osm_key_type = models.CharField(max_length=50, blank=True)
+    osm_value_type = models.CharField(max_length=300, blank=True)
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     osm_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
@@ -146,7 +158,8 @@ class CorrespondenceValide(models.Model):
     # osm attributes
     osm_name = models.CharField(max_length=300, default='')
     osm_shape = models.CharField(choices=STRUCTURE_TYPE, default='', max_length=10)
-
+    osm_key_type = models.CharField(max_length=50, blank=True)
+    osm_value_type = models.CharField(max_length=300, blank=True)
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     osm_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
@@ -155,7 +168,7 @@ class CorrespondenceValide(models.Model):
     coordinates_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
     pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, default=0, null=True)
-    date_validation = models.DateTimeField(auto_now_add=True, blank=True)
+    date_invalidation = models.DateTimeField(default=timezone.now)
 
     class Meta:
         unique_together = ('reference_gn', 'reference_osm')
@@ -178,8 +191,8 @@ class CorrespondenceInvalide(models.Model):
     # osm attributes
     osm_name = models.CharField(max_length=300, default='')
     osm_shape = models.CharField(choices=STRUCTURE_TYPE, default='', max_length=10)
-    osm_key_type = models.CharField(max_length=50, default='')
-    osm_value_type = models.CharField(max_length=300, default='')
+    osm_key_type = models.CharField(max_length=50, blank=True)
+    osm_value_type = models.CharField(max_length=300, blank=True)
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     osm_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
@@ -188,7 +201,7 @@ class CorrespondenceInvalide(models.Model):
     coordinates_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
     pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, default=0, null=True)
-    date_invalidation = models.DateTimeField(auto_now_add=True, blank=True)
+    date_invalidation = models.DateTimeField(default=timezone.now)
 
     class Meta:
         unique_together = ('reference_gn', 'reference_osm')
@@ -242,4 +255,15 @@ class CorrespondenceTypesClose(models.Model):
     osm_key = models.CharField(max_length=50)
     osm_value = models.CharField(max_length=300)
     date_validation = models.DateTimeField(blank=False, default=timezone.now)
+
+
+class ScheduledWork(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50)
+    total_rows = models.IntegerField(default=0)
+    affected_rows = models.IntegerField(default=0)
+    error_rows = models.IntegerField(default=0)
+    status = models.CharField(choices=STRUCTURE_STATES, max_length=10)
+    initial_date = models.DateTimeField(blank=True)
+    final_date = models.DateTimeField(blank=True)
 

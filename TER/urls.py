@@ -34,10 +34,10 @@ router.register(r'correspondence-types', views.CorrespondenceTypesViewSet)
 router.register(r'correspondence-types-close', views.CorrespondenceTypesCloseViewSet)
 router.register(r'correspondence-valide', views.CorrespondenceValideView, base_name='correspondence-valide')
 router.register(r'correspondence-invalide', views.CorrespondenceInvalideView,  base_name='correspondence-invalide')
+router.register(r'scheduled-work', views.ScheduledWorkViewSet)
 
 
 urlpatterns = [
-    # url(r'^$', 'views.home', name='home'),
     url(r'^', include(router.urls)),
     url(r'^admin/', admin.site.urls),
     url(r'^api-auth/',include('rest_framework.urls', namespace='rest_framework')),
