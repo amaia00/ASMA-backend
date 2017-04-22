@@ -51,6 +51,7 @@ class Node(models.Model):
     relation_reference = models.ForeignKey('Relation', on_delete=models.CASCADE,
                                            null=True, blank=True)
     role = models.CharField(max_length=50, null=True)
+    # Si le tag name de l'entite a été déjà cherché ou pas.
     checked_name = models.BooleanField(default=False)
 
     class Meta:
@@ -263,7 +264,7 @@ class ScheduledWork(models.Model):
     total_rows = models.IntegerField(default=0)
     affected_rows = models.IntegerField(default=0)
     error_rows = models.IntegerField(default=0)
-    status = models.CharField(choices=STRUCTURE_STATES, max_length=10)
-    initial_date = models.DateTimeField(blank=True)
-    final_date = models.DateTimeField(blank=True)
+    status = models.CharField(choices=STRUCTURE_STATES, max_length=15, default=PENDING)
+    initial_date = models.DateTimeField(blank=True, default=timezone.now)
+    final_date = models.DateTimeField(null=True)
 

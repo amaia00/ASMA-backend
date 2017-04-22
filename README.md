@@ -40,3 +40,4 @@ mysql.server start
 TRUNCATE TABLE services_correspondencevalide
 TRUNCATE TABLE services_correspondenceinvalide
 TRUNCATE TABLE services_correspondenceentity
+

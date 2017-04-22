@@ -6,8 +6,6 @@ from services.algorithms.algorithm_blocking import blocking_function
 from services.algorithms.algorithm_align import align_algorithme
 from services.algorithms.pertinence_score import get_pertinence_score
 from services.classes.classes import PositionGPS
-from util.util import print_tags
-from util.functions import update_correspondence_osm
 from util.coordinates_matching import matching_coordinates
 
 __author__ = 'Amaia Nazabal'
@@ -68,7 +66,6 @@ class Command(BaseCommand):
                                                       pertinence_score=pertinence_score)
 
                 correspondence.save()
-                update_correspondence_osm(entity['entity_osm'].id, entity['shape_osm'])
 
             gn_entity.correspondence_check = True
             gn_entity.save()

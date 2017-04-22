@@ -12,7 +12,7 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
 class PointSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Node
-        fields = ('id', 'latitude', 'longitude', 'way_reference', 'relation_reference', 'correspondance_check')
+        fields = ('id', 'latitude', 'longitude', 'way_reference', 'relation_reference', 'checked_name')
 
 
 class WaySerializer(serializers.HyperlinkedModelSerializer):
@@ -96,4 +96,4 @@ class CorrespondenceTypesCloseSerializer(serializers.HyperlinkedModelSerializer)
 class ScheduledWorkSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ScheduledWork
-        fields = ('id', 'name', 'total_rows', 'affected_rows', 'error_rows', 'initial_date', 'final_date')
+        fields = ('id', 'name', 'total_rows', 'affected_rows', 'error_rows', 'status', 'initial_date', 'final_date')

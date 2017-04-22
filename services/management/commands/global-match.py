@@ -32,12 +32,15 @@ class Command(BaseCommand):
 
             for geoname_entity in geoname_entities:
                 try:
-                    call_command('correspondence', geoname_id=geoname_entity.id)
+                    call_command('correspondance', geoname_entity['id'])
 
                     scheduled_work.affected_rows += 1
                     scheduled_work.save()
 
-                except CommandError:
+                except CommandError as error:
+                    self.stdout.write(
+                        self.style.ERROR('%s :Error: %s.' %
+                                                 (datetime.now(), error)))
                     scheduled_work.error_rows += 1
                     scheduled_work.save()
 

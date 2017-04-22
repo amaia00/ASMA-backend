@@ -1,6 +1,7 @@
-from rest_framework import views, viewsets, permissions
+from rest_framework import viewsets, permissions
 from rest_framework import status
 from rest_framework.response import Response
+from django.conf import settings
 from .permissions import ReadOnlyPermission
 from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geoname, \
     FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, ScheduledWork
@@ -9,6 +10,13 @@ from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationS
     FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
     CorrespondenceInvalideSerializer, ParametersScorePertinenceSerializer, ScheduledWorkSerializer
 from rest_framework.request import Request
+from rest_framework.pagination import PageNumberPagination
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 100
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -72,10 +80,10 @@ class CorrespondenceEntityView(viewsets.ViewSet):
 
             except CorrespondenceEntity.DoesNotExist:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
+
         elif request.GET.get('gn'):
             try:
                 correspondence = CorrespondenceEntity.objects.filter(reference_gn=int(request.GET.get('gn')))
-
                 serializer = CorrespondenceEntitySerializer(correspondence, many=True)
 
             except CorrespondenceEntity.DoesNotExist:
@@ -90,10 +98,21 @@ class CorrespondenceEntityView(viewsets.ViewSet):
             except CorrespondenceEntity.DoesNotExist:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
-
         else:
             correspondences = CorrespondenceEntity.objects.all()
-            serializer = CorrespondenceEntitySerializer(correspondences, many=True)
+            paginator = Paginator(correspondences, settings.REST_FRAMEWORK['PAGE_SIZE'])
+            page = request.GET.get('page')
+
+            try:
+                correspondences_by_page = paginator.page(page)
+            except PageNotAnInteger:
+                # If page is not an integer, deliver first page.
+                correspondences_by_page = paginator.page(1)
+            except EmptyPage:
+                # If page is out of range (e.g. 9999), deliver last page of results.
+                correspondences_by_page = paginator.page(paginator.num_pages)
+
+            serializer = CorrespondenceEntitySerializer(correspondences_by_page, many=True)
 
         return Response(serializer.data)
 
