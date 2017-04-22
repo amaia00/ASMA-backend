@@ -40,6 +40,5 @@ router.register(r'scheduled-work', views.ScheduledWorkViewSet)
 urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^admin/', admin.site.urls),
-    url(r'^api-auth/',include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^geoname-search/(?P<query>\W+)[/]$', views.GeonameSearch.as_view(), name="geoname-search")
+    url(r'^api-auth/',include('rest_framework.urls', namespace='rest_framework'))
 ]

@@ -34,3 +34,9 @@ ps aux | grep mysql
 kill -9 8922
 mysql.server stop
 mysql.server start
+
+
+--> Pour lancer le processus de correspondance global
+TRUNCATE TABLE services_correspondencevalide
+TRUNCATE TABLE services_correspondenceinvalide
+TRUNCATE TABLE services_correspondenceentity

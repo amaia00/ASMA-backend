@@ -1,5 +1,4 @@
 from rest_framework import views, viewsets, permissions
-from services.api.geonames import search_entity
 from rest_framework import status
 from rest_framework.response import Response
 from .permissions import ReadOnlyPermission
@@ -97,14 +96,6 @@ class CorrespondenceEntityView(viewsets.ViewSet):
             serializer = CorrespondenceEntitySerializer(correspondences, many=True)
 
         return Response(serializer.data)
-
-
-class GeonameSearch(views.APIView):
-    def get(self, request, query, *args, **kwargs):
-        list = search_entity(query)
-        response = Response(list, status=status.HTTP_200_OK)
-
-        return response
 
 
 class CorrespondenceValideView(viewsets.ViewSet):
