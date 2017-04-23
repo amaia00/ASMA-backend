@@ -2,7 +2,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from services.classes.classes import PositionGPS
 from util.coordinates_matching import matching_coordinates
-from services.models import Geoname, Tag
+from services.models import Geoname, Tag, ParametersScorePertinence
 from services.classes.classes import EntityGeoNames
 from services.algorithms.algorithm_align import match_type_correspondence, match_type_synonyms
 from services.algorithms.algorithm_blocking import blocking_function
@@ -42,15 +42,35 @@ class Command(BaseCommand):
             #     print(entity_osm['entity_osm'].id)
             #     print("------------------------------------------------------------")
 
-            tags = Tag.objects.distinct().only('key').all()
-            for tag in tags:
-                key = tag.key
-                try:
-                    if (key[:5] == 'name:' and key != 'name:en'):
-                        print("rejete ", key)
+            # printtags = Tag.objects.distinct().only('key').all()
+            # for tag in tags:
+            #     key = tag.key
+            #     try:
+            #         if (key[:5] == 'name:' and key != 'name:en'):
+            #             print("rejete ", key)
+            #
+            #     except IndexError:
+            #         print("error ", key)
 
-                except IndexError:
-                    print("error ", key)
+            osm_type_key = None
+            osm_type_value = None
+            gn_feature_class = None
+            gn_feature_code = None
+            all_types = True
+
+            params = ParametersScorePertinence.objects.filter(name='weight_matching',
+                                                              osm_key_type=osm_type_key,
+                                                              osm_value_type=osm_type_value,
+                                                              gn_feature_class=gn_feature_class,
+                                                              gn_feature_code=gn_feature_code,
+                                                              all_types=all_types).values()[0]
+
+            weight_geographical_coordinates = float(params['weight_coordinates'])
+            weight_name_matching = float(params['weight_name'])
+            weight_type_matching = float(params['weight_type'])
+
+
+            print(weight_geographical_coordinates, weight_name_matching, weight_type_matching)
 
         except Exception as error:
             raise CommandError(error)

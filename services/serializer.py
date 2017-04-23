@@ -72,14 +72,14 @@ class CorrespondenceInvalideSerializer(serializers.HyperlinkedModelSerializer):
 class ParameterSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Parameters
-        fields = ('id', 'name', 'value', 'description')
+        fields = ('name', 'value', 'description')
 
 
 class ParametersScorePertinenceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ParametersScorePertinence
-        fields = ('id', 'name', 'value', 'description', 'osm_key_type', 'osm_value_type', 'gn_feature_class',
-                  'gn_feature_code', 'all_types')
+        fields = ('id', 'name', 'weight_type', 'weight_name', 'weight_coordinates', 'osm_key_type', 'osm_value_type',
+                  'gn_feature_class', 'gn_feature_code', 'all_types', 'date')
 
 
 class CorrespondenceTypesSerializer(serializers.HyperlinkedModelSerializer):

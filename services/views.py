@@ -12,8 +12,8 @@ from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationS
     CorrespondenceInvalideSerializer, ParametersScorePertinenceSerializer, ScheduledWorkSerializer
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.contrib.auth import authenticate, login
-from rest_framework.authtoken.models import Token
 from rest_framework.renderers import JSONRenderer
+
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
@@ -60,7 +60,7 @@ class ParametersViewSet(viewsets.ModelViewSet):
 class ParametersScorePertinenceViewSet(viewsets.ModelViewSet):
     queryset = ParametersScorePertinence.objects.all()
     serializer_class = ParametersScorePertinenceSerializer
-    permission_classes = (ReadOnlyPermission,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
 class CorrespondenceEntityView(viewsets.ViewSet):

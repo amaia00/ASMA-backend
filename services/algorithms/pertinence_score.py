@@ -13,31 +13,20 @@ def get_pertinence_score(**kwargs):
 
     match_geographical_coordinates = float(kwargs.get('match_geographical_coordinates', 0))
 
-    all = False
+    all_types = False
     if not osm_type_key:
-        all = True
+        all_types = True
 
-    weight_geographical_coordinates = float(
-        ParametersScorePertinence.objects.filter(name='weight_geographical_coordinates',
-                                                 osm_key_type=osm_type_key,
-                                                 osm_value_type=osm_type_value,
-                                                 gn_feature_class=gn_feature_class,
-                                                 gn_feature_code=gn_feature_code,
-                                                 all_types=all).values('value')[0]['value'])
+    params = ParametersScorePertinence.objects.filter(name='weight_matching',
+                                                      osm_key_type=osm_type_key,
+                                                      osm_value_type=osm_type_value,
+                                                      gn_feature_class=gn_feature_class,
+                                                      gn_feature_code=gn_feature_code,
+                                                      all_types=all_types).values()[0]
 
-    weight_name_matching = float(ParametersScorePertinence.objects.filter(name='weight_name_matching',
-                                                                          osm_key_type=osm_type_key,
-                                                                          osm_value_type=osm_type_value,
-                                                                          gn_feature_class=gn_feature_class,
-                                                                          gn_feature_code=gn_feature_code,
-                                                                          all_types=all).values('value')[0]['value'])
-
-    weight_type_matching = float(ParametersScorePertinence.objects.filter(name='weight_name_matching',
-                                                                          osm_key_type=osm_type_key,
-                                                                          osm_value_type=osm_type_value,
-                                                                          gn_feature_class=gn_feature_class,
-                                                                          gn_feature_code=gn_feature_code,
-                                                                          all_types=all).values('value')[0]['value'])
+    weight_geographical_coordinates = float(params['weight_coordinates'])
+    weight_name_matching = float(params['weight_name'])
+    weight_type_matching = float(params['weight_type'])
 
     match_name_pertinence = match_name * weight_name_matching
     match_type_pertinence = match_type * weight_type_matching

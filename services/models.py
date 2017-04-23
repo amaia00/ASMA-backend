@@ -222,25 +222,24 @@ class CorrespondenceInvalide(models.Model):
 class ParametersScorePertinence(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
-    value = models.CharField(max_length=200)
     active = models.BooleanField(default=True)
-    description = models.CharField(max_length=200)
+
+    weight_type = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    weight_name = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    weight_coordinates = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
     osm_key_type = models.CharField(max_length=50, default='', null=True)
     osm_value_type = models.CharField(max_length=300, default='', null=True)
     gn_feature_class = models.CharField(max_length=1, default='', null=True)
     gn_feature_code = models.CharField(max_length=10, default='', null=True)
+    date = models.DateTimeField(default=timezone.now, blank=False)
 
     all_types = models.BooleanField(default=True, null=False)
 
-    class Meta:
-        unique_together = ('name', 'osm_key_type', 'osm_value_type', 'gn_feature_class', 'gn_feature_code', 'all_types')
-
 
 class Parameters(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=50)
-    value = models.CharField(max_length=200)
+    name = models.CharField(primary_key=True, max_length=50)
+    value = models.CharField(max_length=300)
     active = models.BooleanField(default=True)
     description = models.CharField(max_length=200)
 
