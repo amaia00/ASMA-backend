@@ -96,4 +96,5 @@ class CorrespondenceTypesCloseSerializer(serializers.HyperlinkedModelSerializer)
 class ScheduledWorkSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ScheduledWork
-        fields = ('id', 'name', 'total_rows', 'affected_rows', 'error_rows', 'status', 'initial_date', 'final_date')
+        fields = ('id', 'name', 'total_rows', 'affected_rows', 'error_rows', 'file_name', 'provider','status',
+                  'initial_date', 'final_date')

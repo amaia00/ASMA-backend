@@ -3,6 +3,14 @@ from django.utils import timezone
 
 __author__ = 'Amaia Nazabal'
 
+GEONAMES = 'GEONAMES'
+OSM = 'OSM'
+
+PROVIDERS = (
+    (GEONAMES, GEONAMES),
+    (OSM, OSM)
+)
+
 NODE = 'NODE'
 WAY = 'WAY'
 AREA = 'AREA'
@@ -26,6 +34,9 @@ STRUCTURE_STATES = (
     (ERROR, ERROR),
     (FINALIZED, FINALIZED)
 )
+
+SCHEDULED_WORK_IMPORTATION_PROCESS = 'importation_process'
+SCHEDULED_WORK_CORRESPONDENCE_PROCESS = 'correspondence_process'
 
 
 class Tag(models.Model):
@@ -264,6 +275,8 @@ class ScheduledWork(models.Model):
     total_rows = models.IntegerField(default=0)
     affected_rows = models.IntegerField(default=0)
     error_rows = models.IntegerField(default=0)
+    file_name = models.CharField(max_length=100, default='')
+    provider = models.CharField(choices=PROVIDERS, default='', max_length=10)
     status = models.CharField(choices=STRUCTURE_STATES, max_length=15, default=PENDING)
     initial_date = models.DateTimeField(blank=True, default=timezone.now)
     final_date = models.DateTimeField(null=True)

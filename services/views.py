@@ -4,7 +4,8 @@ from rest_framework.request import Request
 from django.conf import settings
 from .permissions import ReadOnlyPermission
 from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geoname, \
-    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, ScheduledWork
+    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, \
+    ScheduledWork, PENDING,SCHEDULED_WORK_IMPORTATION_PROCESS
 from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationSerializer, \
     CorrespondenceValideSerializer, CorrespondenceEntitySerializer, ParameterSerializer, GeonameSerializer,\
     FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
@@ -51,7 +52,7 @@ class FeatureCodeViewSet(viewsets.ModelViewSet):
 class ParametersViewSet(viewsets.ModelViewSet):
     queryset = Parameters.objects.filter(active=1).all()
     serializer_class = ParameterSerializer
-    permission_classes = (ReadOnlyPermission,)
+    # permission_classes = (ReadOnlyPermission,)
 
 
 class ParametersScorePertinenceViewSet(viewsets.ModelViewSet):
@@ -258,14 +259,28 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
 class ImportationView(views.APIView):
     parser_classes = (parsers.FileUploadParser, )
 
-    def post(self, request, format='jpg'):
-        up_file = request.FILES['file']
-        destination = open('~/PycharmProjects/TER_BACK_END/xml_files/' + up_file.name, 'wb+')
-        for chunk in up_file.chunks():
-            destination.write(chunk)
-            destination.close()
+    def post(self, request):
 
-        # ...
-        # do some stuff with uploaded file
-        # ...
-        return Response(up_file.name, status.HTTP_201_CREATED)
+        uploaded_file = request.FILES['file']
+        # Header: Provider-Name
+        provider = request.META['HTTP_PROVIDER_NAME']
+
+
+        if provider is not None:
+            if uploaded_file.name[-4:] == '.txt' or uploaded_file.name[-4:] == '.xml':
+
+                path = Parameters.objects.only('value').get(name='files_directory_path_importation')
+                destination = open(path.value + uploaded_file.name, 'wb+')
+                for chunk in uploaded_file.chunks():
+                    destination.write(chunk)
+                    destination.close()
+
+                scheduled_work = ScheduledWork(name=SCHEDULED_WORK_IMPORTATION_PROCESS, status=PENDING,
+                                               file_name=uploaded_file.name, provider=provider)
+                scheduled_work.save()
+
+                return Response(uploaded_file.name, status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)

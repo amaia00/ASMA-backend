@@ -1,6 +1,7 @@
 # !/usr/bin/env python3
 from django.core.management.base import BaseCommand, CommandError
-from services.models import Geoname, ScheduledWork, PENDING, INPROGRESS, FINALIZED, ERROR
+from services.models import Geoname, ScheduledWork, PENDING, INPROGRESS, FINALIZED, ERROR, \
+    SCHEDULED_WORK_CORRESPONDENCE_PROCESS
 from datetime import datetime
 from django.core.management import call_command
 from django.utils import timezone
@@ -24,7 +25,7 @@ class Command(BaseCommand):
             '''
             On garde le processus dans la table avec l'état PENDING
             '''
-            scheduled_work = ScheduledWork.objects.get(name='correspondence_process', status=PENDING)
+            scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_CORRESPONDENCE_PROCESS, status=PENDING)
             scheduled_work.status = INPROGRESS
             scheduled_work.total_rows = total_rows
             scheduled_work.initial_date = timezone.now()
