@@ -11,7 +11,9 @@ from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationS
     FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
     CorrespondenceInvalideSerializer, ParametersScorePertinenceSerializer, ScheduledWorkSerializer
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-
+from django.contrib.auth import authenticate, login
+from rest_framework.authtoken.models import Token
+from rest_framework.renderers import JSONRenderer
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
@@ -52,13 +54,13 @@ class FeatureCodeViewSet(viewsets.ModelViewSet):
 class ParametersViewSet(viewsets.ModelViewSet):
     queryset = Parameters.objects.filter(active=1).all()
     serializer_class = ParameterSerializer
-    # permission_classes = (ReadOnlyPermission,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
 class ParametersScorePertinenceViewSet(viewsets.ModelViewSet):
     queryset = ParametersScorePertinence.objects.all()
     serializer_class = ParametersScorePertinenceSerializer
-    # permission_classes = (ReadOnlyPermission,)
+    permission_classes = (ReadOnlyPermission,)
 
 
 class CorrespondenceEntityView(viewsets.ViewSet):
@@ -265,7 +267,6 @@ class ImportationView(views.APIView):
         # Header: Provider-Name
         provider = request.META['HTTP_PROVIDER_NAME']
 
-
         if provider is not None:
             if uploaded_file.name[-4:] == '.txt' or uploaded_file.name[-4:] == '.xml':
 
@@ -284,3 +285,51 @@ class ImportationView(views.APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+
+class LoginView(views.APIView):
+
+    def post(self, request):
+
+        username = request.POST['username']
+        password = request.POST['password']
+
+        user = authenticate(username=username, password=password)
+
+        if user:
+
+            if user.is_active:
+                login(request, user)
+                return Response(user, status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+class ObtainAuthToken(views.APIView):
+    throttle_classes = ()
+    permission_classes = ()
+    parser_classes = (
+        parsers.FormParser,
+        parsers.MultiPartParser,
+        parsers.JSONParser,
+    )
+
+    renderer_classes = (JSONRenderer,)
+
+    def post(self, request):
+        username = request.POST['username']
+        password = request.POST['password']
+
+        user = authenticate(username=username, password=password)
+
+        if user:
+            if user.is_active:
+                login(request, user)
+
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)

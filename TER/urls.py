@@ -16,7 +16,9 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from rest_framework.routers import DefaultRouter
+from rest_framework.authtoken import views as authviews
 from services import views
+
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r'tags', views.TagViewSet)
@@ -41,5 +43,7 @@ urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^admin/', admin.site.urls),
     url(r'^api-auth/',include('rest_framework.urls', namespace='rest_framework')),
-    url(r'importation', views.ImportationView.as_view())
+    url(r'^api-token-auth/', authviews.obtain_auth_token),
+    url(r'importation', views.ImportationView.as_view()),
+    url(r'login', views.ObtainAuthToken.as_view())
 ]

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Node, Tag, Way, Relation, Parameters, CorrespondenceEntity, CorrespondenceValide, Geoname, \
     FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, ScheduledWork
+from rest_framework.renderers import JSONRenderer
 
 
 class TagSerializer(serializers.HyperlinkedModelSerializer):
@@ -98,3 +99,14 @@ class ScheduledWorkSerializer(serializers.HyperlinkedModelSerializer):
         model = ScheduledWork
         fields = ('id', 'name', 'total_rows', 'affected_rows', 'error_rows', 'file_name', 'provider','status',
                   'initial_date', 'final_date')
+
+#
+# class LoginSerializer(serializers.Serializer):
+#     username = serializers.CharField()
+#     password = serializers.CharField()
+#
+#     def validate(self, attributs):
+#
+#
+#         attributs['user'] = user
+#         return attributs
