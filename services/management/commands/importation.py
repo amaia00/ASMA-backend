@@ -344,13 +344,13 @@ def another_language(key):
     """
 
     :param key:
-    :return:
+    :return: 
     """
     try:
-        if key[-3:][:1] != ':' or key[-3:] == ':en' and key[5] != 'name:' or key == 'name:en':
-            return False
+        if key[:5] == 'name:' and key != 'name:en':
+            return True
 
     except IndexError:
         return False
 
-    return True
+    return False

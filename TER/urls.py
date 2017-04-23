@@ -40,5 +40,6 @@ router.register(r'scheduled-work', views.ScheduledWorkViewSet)
 urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^admin/', admin.site.urls),
-    url(r'^api-auth/',include('rest_framework.urls', namespace='rest_framework'))
+    url(r'^api-auth/',include('rest_framework.urls', namespace='rest_framework')),
+    url(r'importation', views.ImportationView.as_view())
 ]

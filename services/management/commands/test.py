@@ -2,7 +2,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from services.classes.classes import PositionGPS
 from util.coordinates_matching import matching_coordinates
-from services.models import Geoname
+from services.models import Geoname, Tag
 from services.classes.classes import EntityGeoNames
 from services.algorithms.algorithm_align import match_type_correspondence, match_type_synonyms
 from services.algorithms.algorithm_blocking import blocking_function
@@ -25,22 +25,34 @@ class Command(BaseCommand):
             # coordinates_matching = matching_coordinates(position_gn, position_osm)
             # print(coordinates_matching)
 
-            gn_entity = Geoname.objects.get(pk=8224606)
-            geoname = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
-                                    longitude=gn_entity.longitude, feature_class=gn_entity.fclass,
-                                    feature_code=gn_entity.fcode)
-            list_block_entities = blocking_function(geoname)
-            for entity_osm in list_block_entities:
-                print("------------------------------------------------------------")
-                tag_osm = type_tag_osm, matching_type_level = match_type_correspondence(geoname, entity_osm.get('tag_list'))
-                if not matching_type_level:
-                    tag_osm, _ = type_tag_osm, matching_type_level = match_type_synonyms(geoname, entity_osm.get('tag_list'))
+            # gn_entity = Geoname.objects.get(pk=8224606)
+            # geoname = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
+            #                         longitude=gn_entity.longitude, feature_class=gn_entity.fclass,
+            #                         feature_code=gn_entity.fcode)
+            # list_block_entities = blocking_function(geoname)
+            # for entity_osm in list_block_entities:
+            #     print("------------------------------------------------------------")
+            #     tag_osm = type_tag_osm, matching_type_level = match_type_correspondence(geoname, entity_osm.get('tag_list'))
+            #     if not matching_type_level:
+            #         tag_osm, _ = type_tag_osm, matching_type_level = match_type_synonyms(geoname, entity_osm.get('tag_list'))
+            #
+            #     print(geoname.get_feature_class(), geoname.get_feature_code())
+            #     print("TAG::::", tag_osm.key, tag_osm.value)
+            #     print("matching_type_level", matching_type_level)
+            #     print(entity_osm['entity_osm'].id)
+            #     print("------------------------------------------------------------")
 
-                print(geoname.get_feature_class(), geoname.get_feature_code())
-                print("TAG::::", tag_osm.key, tag_osm.value)
-                print("matching_type_level", matching_type_level)
-                print(entity_osm['entity_osm'].id)
-                print("------------------------------------------------------------")
+            tags = Tag.objects.distinct().only('key').all()
+            for tag in tags:
+                key = tag.key
+                try:
+                    if (key[:5] == 'name:' and key != 'name:en'):
+                        print("rejete ", key)
+
+                except IndexError:
+                    print("error ", key)
 
         except Exception as error:
             raise CommandError(error)
+
+

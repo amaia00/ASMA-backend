@@ -1,6 +1,6 @@
-from rest_framework import viewsets, permissions
-from rest_framework import status
+from rest_framework import viewsets, permissions, views, status, parsers
 from rest_framework.response import Response
+from rest_framework.request import Request
 from django.conf import settings
 from .permissions import ReadOnlyPermission
 from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geoname, \
@@ -9,14 +9,7 @@ from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationS
     CorrespondenceValideSerializer, CorrespondenceEntitySerializer, ParameterSerializer, GeonameSerializer,\
     FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
     CorrespondenceInvalideSerializer, ParametersScorePertinenceSerializer, ScheduledWorkSerializer
-from rest_framework.request import Request
-from rest_framework.pagination import PageNumberPagination
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-
-class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 100
-    page_size_query_param = 'page_size'
-    max_page_size = 1000
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -56,7 +49,7 @@ class FeatureCodeViewSet(viewsets.ModelViewSet):
 
 
 class ParametersViewSet(viewsets.ModelViewSet):
-    queryset = Parameters.objects.all()
+    queryset = Parameters.objects.filter(active=1).all()
     serializer_class = ParameterSerializer
     permission_classes = (ReadOnlyPermission,)
 
@@ -260,3 +253,19 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
     queryset = ScheduledWork.objects.all()
     serializer_class = ScheduledWorkSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+
+class ImportationView(views.APIView):
+    parser_classes = (parsers.FileUploadParser, )
+
+    def post(self, request, format='jpg'):
+        up_file = request.FILES['file']
+        destination = open('~/PycharmProjects/TER_BACK_END/xml_files/' + up_file.name, 'wb+')
+        for chunk in up_file.chunks():
+            destination.write(chunk)
+            destination.close()
+
+        # ...
+        # do some stuff with uploaded file
+        # ...
+        return Response(up_file.name, status.HTTP_201_CREATED)
