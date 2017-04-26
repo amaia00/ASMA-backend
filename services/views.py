@@ -266,8 +266,6 @@ class ImportationView(views.APIView):
 
         if provider is not None and file_name is not None:
 
-                path = Parameters.objects.only('value').get(name='files_directory_path_importation')
-
                 scheduled_work = ScheduledWork(name=SCHEDULED_WORK_IMPORTATION_PROCESS, status=PENDING,
                                                file_name=file_name, provider=provider)
                 scheduled_work.save()
