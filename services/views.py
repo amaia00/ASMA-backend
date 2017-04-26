@@ -20,6 +20,14 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
     permission_classes = (ReadOnlyPermission,)
 
+    def get_queryset(self):
+        queryset = Tag.objects.all()
+        reference = self.request.query_params.get('reference', None)
+        if reference is not None:
+            queryset = queryset.filter(reference=reference).exclude(key__contains="name")
+
+        return queryset
+
 
 class PointViewSet(viewsets.ModelViewSet):
     queryset = Node.objects.all()
