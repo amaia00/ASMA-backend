@@ -259,32 +259,23 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
 
 
 class ImportationView(views.APIView):
-    parser_classes = (parsers.FileUploadParser, )
 
     def post(self, request):
+        provider = request.POST['provider-name']
+        file_name = request.POST['file-name']
 
-        uploaded_file = request.FILES['file']
-        # Header: Provider-Name
-        provider = request.META['HTTP_PROVIDER_NAME']
-
-        if provider is not None:
-            if uploaded_file.name[-4:] == '.txt' or uploaded_file.name[-4:] == '.xml':
+        print("IL ARRIVE")
+        if provider is not None and file_name is not None:
 
                 path = Parameters.objects.only('value').get(name='files_directory_path_importation')
-                destination = open(path.value + uploaded_file.name, 'wb+')
-                for chunk in uploaded_file.chunks():
-                    destination.write(chunk)
-                    destination.close()
 
                 scheduled_work = ScheduledWork(name=SCHEDULED_WORK_IMPORTATION_PROCESS, status=PENDING,
-                                               file_name=uploaded_file.name, provider=provider)
+                                               file_name=file_name, provider=provider)
                 scheduled_work.save()
 
-                return Response(uploaded_file.name, status.HTTP_204_NO_CONTENT)
+                return Response(file_name, status.HTTP_204_NO_CONTENT)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
 
 class LoginView(views.APIView):
