@@ -260,17 +260,15 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
 
 class ImportationView(views.APIView):
     def post(self, request, format=None):
-
-        provider = request.data.get('provider_name')
-        file_name = request.data.get('file_name')
-
-        if provider is not None and file_name is not None:
-
-                scheduled_work = ScheduledWork(name=SCHEDULED_WORK_IMPORTATION_PROCESS, status=PENDING,
-                                               file_name=file_name, provider=provider)
-                scheduled_work.save()
-
-                return Response(file_name, status.HTTP_204_NO_CONTENT)
+        serializer = ScheduledWorkSerializer(data=request.data)
+        if serializer.is_valid():
+            #
+            # scheduled_work = ScheduledWork(name=SCHEDULED_WORK_IMPORTATION_PROCESS, status=PENDING,
+            #                                file_name=file_name, provider=provider)
+            # scheduled_work.save()
+            serializer.save()
+            print (serializer.data.values())
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
