@@ -259,12 +259,11 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
 
 
 class ImportationView(views.APIView):
+    def post(self, request, format=None):
 
-    def post(self, request):
-        provider = request.POST['provider_name']
-        file_name = request.POST['file_name']
+        provider = request.data.get('provider_name')
+        file_name = request.data.get('file_name')
 
-        print("IL ARRIVE")
         if provider is not None and file_name is not None:
 
                 path = Parameters.objects.only('value').get(name='files_directory_path_importation')
