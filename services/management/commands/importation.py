@@ -131,24 +131,30 @@ def geoname_importation(self, file):
 
     print("%s INFO: Importation points geographiques." % datetime.now())
 
-    file_object = open(file, 'r')
+    #file_object = open(file, 'r')
     count = 0
-    for line in file_object:
-        fields = line.split('\t')
-        try:
-            elevation = int(fields[15])
-        except ValueError:
-            elevation = 0
+    with open(file, encoding='utf-8') as file_object:
+        for line in file_object:
+            fields = line.split('\t')
+            try:
+                elevation = int(fields[15])
+            except ValueError:
+                elevation = 0
 
-        geoname = Geoname(id=fields[0], name=fields[1], ascii_name=fields[2],
-                          alternative_name=fields[3], latitude=fields[4],
-                          longitude=fields[5], fclass=fields[6], fcode=fields[7],
-                          cc2=fields[9], admin1=fields[10], admin2=fields[11],
-                          admin3=fields[12], admin4=fields[13], population=fields[14],
-                          elevation=elevation, gtopo30=fields[16], timezone=fields[17],
-                          moddate=fields[18])
-        geoname.save()
-        count += 1
+            try:
+                geoname = Geoname(id=fields[0], name=fields[1], ascii_name=fields[2],
+                                  alternative_name=fields[3].encode('utf-8'), latitude=fields[4],
+                                  longitude=fields[5], fclass=fields[6], fcode=fields[7],
+                                  cc2=fields[9], admin1=fields[10], admin2=fields[11],
+                                  admin3=fields[12], admin4=fields[13], population=fields[14],
+                                  elevation=elevation, gtopo30=fields[16], timezone=fields[17],
+                                  moddate=fields[18])
+                geoname.save()
+                count += 1
+            except Exception as error:
+                print(line)
+                self.stdout.write(
+                    self.style.ERROR("One error in the importation" + str(error)))
 
     self.stdout.write(
         self.style.MIGRATE_HEADING("%s INFO: %d entities imported." % (datetime.now(), count)))

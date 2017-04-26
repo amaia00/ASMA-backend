@@ -25,6 +25,7 @@ python manage.py runserver
 
 Execute geonames importation
 ./manage.py import TER/xml_files/AD.txt  --skip-osm -file3 TER/xml_files/featureCodes_en.txt 
+./manage.py importation TER/xml_files/FR.txt  --skip-osm
 
 
 ./manage.py correspondance 8224609
@@ -41,3 +42,18 @@ TRUNCATE TABLE services_correspondencevalide
 TRUNCATE TABLE services_correspondenceinvalide
 TRUNCATE TABLE services_correspondenceentity
 
+
+
+
+ALTER TABLE TER.services_geoname MODIFY COLUMN name VARCHAR(10000)
+    CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
+
+ALTER TABLE
+    TER.services_geoname
+    CONVERT TO CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+
+DELETE FROM services_geoname
+WHERE correspondence_check = 0
+    
+    var1 varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL
