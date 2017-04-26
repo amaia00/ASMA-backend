@@ -26,22 +26,25 @@ class Command(BaseCommand):
             # coordinates_matching = matching_coordinates(position_gn, position_osm)
             # print(coordinates_matching)
 
-            # gn_entity = Geoname.objects.get(pk=8224606)
-            # geoname = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
-            #                         longitude=gn_entity.longitude, feature_class=gn_entity.fclass,
-            #                         feature_code=gn_entity.fcode)
-            # list_block_entities = blocking_function(geoname)
-            # for entity_osm in list_block_entities:
-            #     print("------------------------------------------------------------")
-            #     tag_osm = type_tag_osm, matching_type_level = match_type_correspondence(geoname, entity_osm.get('tag_list'))
-            #     if not matching_type_level:
-            #         tag_osm, _ = type_tag_osm, matching_type_level = match_type_synonyms(geoname, entity_osm.get('tag_list'))
-            #
-            #     print(geoname.get_feature_class(), geoname.get_feature_code())
-            #     print("TAG::::", tag_osm.key, tag_osm.value)
-            #     print("matching_type_level", matching_type_level)
-            #     print(entity_osm['entity_osm'].id)
-            #     print("------------------------------------------------------------")
+            gn_entity = Geoname.objects.get(pk=3017833)
+            geoname = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
+                                    longitude=gn_entity.longitude, feature_class=gn_entity.fclass,
+                                    feature_code=gn_entity.fcode)
+            list_block_entities = blocking_function(geoname)
+            print("BLOCKING LIST")
+            print(list_block_entities)
+
+            for entity_osm in list_block_entities:
+                print("------------------------------------------------------------")
+                tag_osm = type_tag_osm, matching_type_level = match_type_correspondence(geoname, entity_osm.get('tag_list'))
+                if not matching_type_level:
+                    tag_osm, _ = type_tag_osm, matching_type_level = match_type_synonyms(geoname, entity_osm.get('tag_list'))
+
+                print(geoname.get_feature_class(), geoname.get_feature_code())
+                print("TAG::::", tag_osm.key, tag_osm.value)
+                print("matching_type_level", matching_type_level)
+                print(entity_osm['entity_osm'].id)
+                print("------------------------------------------------------------")
 
             # printtags = Tag.objects.distinct().only('key').all()
             # for tag in tags:
@@ -72,9 +75,9 @@ class Command(BaseCommand):
             #
             # print(weight_geographical_coordinates, weight_name_matching, weight_type_matching)
 
-            string1 = "Sercotel Andorra Park Hotel"
-            string2 = "Andorra Park"
-            print(levenshtein_distance(string1, string2))
+            # string1 = "Sercotel Andorra Park Hotel"
+            # string2 = "Andorra Park"
+            # print(levenshtein_distance(string1, string2))
 
         except Exception as error:
             raise CommandError(error)

@@ -17,11 +17,8 @@ def get_pertinence_score(**kwargs):
     if not osm_type_key:
         all_types = True
 
-    params = ParametersScorePertinence.objects.filter(name='weight_matching',
-                                                      osm_key_type=osm_type_key,
-                                                      osm_value_type=osm_type_value,
-                                                      gn_feature_class=gn_feature_class,
-                                                      gn_feature_code=gn_feature_code,
+    # TODO avec les classes et code
+    params = ParametersScorePertinence.objects.filter(name='weight_matching_global',
                                                       all_types=all_types).values()[0]
 
     weight_geographical_coordinates = float(params['weight_coordinates'])

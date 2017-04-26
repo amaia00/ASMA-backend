@@ -40,8 +40,8 @@ class Command(BaseCommand):
 
                 except CommandError as error:
                     self.stdout.write(
-                        self.style.ERROR('%s :Error: %s.' %
-                                                 (datetime.now(), error)))
+                        self.style.ERROR('%s :Error: %s.Entity id %s' %
+                                                 (datetime.now(), error, geoname_entity['id'])))
                     scheduled_work.error_rows += 1
                     scheduled_work.save()
 
