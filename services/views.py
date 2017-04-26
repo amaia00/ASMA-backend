@@ -261,8 +261,8 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
 class ImportationView(views.APIView):
 
     def post(self, request):
-        provider = request.POST['provider-name']
-        file_name = request.POST['file-name']
+        provider = request.POST['provider_name']
+        file_name = request.POST['file_name']
 
         print("IL ARRIVE")
         if provider is not None and file_name is not None:
