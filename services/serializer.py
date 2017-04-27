@@ -48,7 +48,7 @@ class CorrespondenceEntitySerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'reference_gn', 'reference_osm',
                   'gn_name', 'gn_feature_class', 'gn_feature_code', 'gn_feature_name', 'gn_latitude', 'gn_longitude',
                   'osm_name', 'osm_key_type', 'osm_value_type', 'osm_latitude', 'osm_longitude', 'osm_shape',
-                  'name_matching', 'type_matching', 'coordinates_matching', 'pertinence_score')
+                  'name_matching', 'type_matching', 'coordinates_matching', 'pertinence_score', 'validation')
 
 
 class CorrespondenceValideSerializer(serializers.HyperlinkedModelSerializer):

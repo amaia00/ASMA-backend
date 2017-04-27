@@ -5,7 +5,7 @@ from django.conf import settings
 from .permissions import ReadOnlyPermission
 from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geoname, \
     FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, \
-    ScheduledWork, SCHEDULED_WORK_CORRESPONDENCE_TYPE, SCHEDULED_WORK_IMPORTATION_PROCESS
+    ScheduledWork, SCHEDULED_WORK_CORRESPONDENCE_TYPE, SCHEDULED_WORK_IMPORTATION_PROCESS, VALIDE, INVALIDE
 from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationSerializer, \
     CorrespondenceValideSerializer, CorrespondenceEntitySerializer, ParameterSerializer, GeonameSerializer,\
     FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
@@ -78,10 +78,11 @@ class CorrespondenceEntityView(viewsets.ViewSet):
 
         if request.GET.get('osm') and request.GET.get('gn'):
             try:
-                correspondence = CorrespondenceEntity.objects.get(reference_osm=int(request.GET.get('osm')),
+                correspondence = CorrespondenceEntity.objects.filter(reference_osm=int(request.GET.get('osm')),
                                                                   reference_gn=int(request.GET.get('gn')))
 
                 serializer = CorrespondenceEntitySerializer(correspondence, many=True)
+                print("SERIALIZER DATA: ", correspondence)
 
             except CorrespondenceEntity.DoesNotExist:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -150,7 +151,7 @@ class CorrespondenceValideView(viewsets.ViewSet):
             serializer.save()
 
             CorrespondenceEntity.objects.filter(reference_gn=request.data['reference_gn'],
-                                                reference_osm=request.data['reference_osm']).delete()
+                                                reference_osm=request.data['reference_osm']).update(validation=VALIDE)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -242,7 +243,7 @@ class CorrespondenceInvalideView(viewsets.ViewSet):
             serializer.save()
 
             CorrespondenceEntity.objects.filter(reference_gn=request.data['reference_gn'],
-                                                reference_osm=request.data['reference_osm']).delete()
+                                                reference_osm=request.data['reference_osm']).update(validation=INVALIDE)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 

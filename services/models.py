@@ -35,6 +35,16 @@ STRUCTURE_STATES = (
     (FINALIZED, FINALIZED)
 )
 
+CALCULE = 0
+VALIDE = 1
+INVALIDE = 2
+
+STRUCTURE_CORRESPONDENCES = (
+    (CALCULE, CALCULE),
+    (VALIDE, VALIDE),
+    (INVALIDE, INVALIDE)
+)
+
 SCHEDULED_WORK_IMPORTATION_PROCESS = 'importation_process'
 SCHEDULED_WORK_CORRESPONDENCE_PROCESS = 'correspondence_process'
 SCHEDULED_WORK_CORRESPONDENCE_TYPE = 'types-matching'
@@ -149,6 +159,7 @@ class CorrespondenceEntity(models.Model):
 
     pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, default=0, null=True)
     date_matching = models.DateTimeField(auto_now_add=True, blank=True)
+    validation = models.IntegerField(choices=STRUCTURE_CORRESPONDENCES, default=CALCULE)
 
     class Meta:
         unique_together = ('reference_gn', 'reference_osm')
