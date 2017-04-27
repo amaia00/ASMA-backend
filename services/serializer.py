@@ -78,7 +78,7 @@ class ParameterSerializer(serializers.HyperlinkedModelSerializer):
 class ParametersScorePertinenceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ParametersScorePertinence
-        fields = ('id', 'name', 'weight_type', 'weight_name', 'weight_coordinates', 'osm_key_type', 'osm_value_type',
+        fields = ('id', 'name', 'weight_type', 'weight_name', 'weight_coordinates',
                   'gn_feature_class', 'gn_feature_code', 'all_types', 'date')
 
 
@@ -98,15 +98,4 @@ class ScheduledWorkSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ScheduledWork
         fields = ('id', 'name', 'total_rows', 'affected_rows', 'error_rows', 'file_name', 'provider','status',
-                  'initial_date', 'final_date')
-
-#
-# class LoginSerializer(serializers.Serializer):
-#     username = serializers.CharField()
-#     password = serializers.CharField()
-#
-#     def validate(self, attributs):
-#
-#
-#         attributs['user'] = user
-#         return attributs
+                  'initial_date', 'final_date', 'process_id')

@@ -5,7 +5,7 @@ from django.conf import settings
 from .permissions import ReadOnlyPermission
 from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geoname, \
     FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, \
-    ScheduledWork, PENDING,SCHEDULED_WORK_IMPORTATION_PROCESS
+    ScheduledWork, SCHEDULED_WORK_CORRESPONDENCE_TYPE, SCHEDULED_WORK_IMPORTATION_PROCESS
 from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationSerializer, \
     CorrespondenceValideSerializer, CorrespondenceEntitySerializer, ParameterSerializer, GeonameSerializer,\
     FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
@@ -13,6 +13,7 @@ from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationS
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.contrib.auth import authenticate, login
 from rest_framework.renderers import JSONRenderer
+from services.classes.thread import BackgroundProcess
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -103,7 +104,8 @@ class CorrespondenceEntityView(viewsets.ViewSet):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            correspondences = CorrespondenceEntity.objects.all()
+            correspondences = CorrespondenceEntity.objects.filter(name_matching__gt=0, coordinates_matching__gt=0,
+                                                                  type_matching__gt=0).all()
             paginator = Paginator(correspondences, settings.REST_FRAMEWORK['PAGE_SIZE'])
             page = request.GET.get('page')
 
@@ -265,17 +267,34 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
     serializer_class = ScheduledWorkSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
-
-class ImportationView(views.APIView):
-    def post(self, request, format=None):
+    def create(self, request, **kwargs):
+        print("POST method")
         serializer = ScheduledWorkSerializer(data=request.data)
         if serializer.is_valid():
-            #
-            # scheduled_work = ScheduledWork(name=SCHEDULED_WORK_IMPORTATION_PROCESS, status=PENDING,
-            #                                file_name=file_name, provider=provider)
-            # scheduled_work.save()
             serializer.save()
-            print (serializer.data.values())
+            print("ScheduledWork created")
+
+            if request.data['name'] == SCHEDULED_WORK_CORRESPONDENCE_TYPE:
+                thread = BackgroundProcess(thread_id=1, name=request.data['name'], process=request.data['name'])
+                thread.start()
+            elif request.data['name'] == SCHEDULED_WORK_IMPORTATION_PROCESS:
+                thread = BackgroundProcess(thread_id=1, name=request.data['name'], process=request.data['name'],
+                                           positional_params=request.data['file_name'], others_params=request.data[' bi'])
+                thread.start()
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ImportationView(views.APIView):
+    def post(self, request):
+        serializer = ScheduledWorkSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            BackgroundProcess(thread_id=1, name="importation", process="importation",
+                              positional_params=request.data['file_name'], provider=request.data['provider'])
+
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)

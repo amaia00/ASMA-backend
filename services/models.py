@@ -37,6 +37,7 @@ STRUCTURE_STATES = (
 
 SCHEDULED_WORK_IMPORTATION_PROCESS = 'importation_process'
 SCHEDULED_WORK_CORRESPONDENCE_PROCESS = 'correspondence_process'
+SCHEDULED_WORK_CORRESPONDENCE_TYPE = 'types-matching'
 
 
 class Tag(models.Model):
@@ -228,8 +229,6 @@ class ParametersScorePertinence(models.Model):
     weight_name = models.DecimalField(decimal_places=3, max_digits=4, default=0)
     weight_coordinates = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
-    osm_key_type = models.CharField(max_length=50, default='', null=True)
-    osm_value_type = models.CharField(max_length=300, default='', null=True)
     gn_feature_class = models.CharField(max_length=1, default='', null=True)
     gn_feature_code = models.CharField(max_length=10, default='', null=True)
     date = models.DateTimeField(default=timezone.now, blank=False)
@@ -279,4 +278,5 @@ class ScheduledWork(models.Model):
     status = models.CharField(choices=STRUCTURE_STATES, max_length=15, default=PENDING)
     initial_date = models.DateTimeField(blank=True, default=timezone.now)
     final_date = models.DateTimeField(null=True)
+    process_id = models.IntegerField(default=0)
 

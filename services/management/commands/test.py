@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        try:
+        # try:
 
             # position_gn = PositionGPS(Decimal(42.5116200), Decimal(1.5340800))
             # position_osm = PositionGPS(Decimal(42.5114983), Decimal(1.5344814))
@@ -34,17 +34,24 @@ class Command(BaseCommand):
             print("BLOCKING LIST")
             print(list_block_entities)
 
+            position_gn = PositionGPS(gn_entity.latitude, gn_entity.longitude)
+
             for entity_osm in list_block_entities:
                 print("------------------------------------------------------------")
-                tag_osm = type_tag_osm, matching_type_level = match_type_correspondence(geoname, entity_osm.get('tag_list'))
-                if not matching_type_level:
-                    tag_osm, _ = type_tag_osm, matching_type_level = match_type_synonyms(geoname, entity_osm.get('tag_list'))
+                # tag_osm = type_tag_osm, matching_type_level = match_type_correspondence(geoname, entity_osm.get('tag_list'))
+                # if not matching_type_level:
+                #     tag_osm, _ = type_tag_osm, matching_type_level = match_type_synonyms(geoname, entity_osm.get('tag_list'))
 
-                print(geoname.get_feature_class(), geoname.get_feature_code())
-                print("TAG::::", tag_osm.key, tag_osm.value)
-                print("matching_type_level", matching_type_level)
-                print(entity_osm['entity_osm'].id)
+                # print(geoname.get_feature_class(), geoname.get_feature_code())
+                # print("TAG::::", tag_osm.key, tag_osm.value)
+                # print("matching_type_level", matching_type_level)
+                print(entity_osm['entity_osm'])
                 print("------------------------------------------------------------")
+
+                (latitude_osm, longitude_osm) = entity_osm['coordinates']
+                position_osm = PositionGPS(latitude_osm, longitude_osm)
+                coordinates_matching = matching_coordinates(position_gn, position_osm)
+
 
             # printtags = Tag.objects.distinct().only('key').all()
             # for tag in tags:
@@ -79,7 +86,7 @@ class Command(BaseCommand):
             # string2 = "Andorra Park"
             # print(levenshtein_distance(string1, string2))
 
-        except Exception as error:
-            raise CommandError(error)
+        # except Exception as error:
+        #     raise CommandError(error)
 
 

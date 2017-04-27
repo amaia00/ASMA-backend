@@ -23,7 +23,7 @@ class Command(BaseCommand):
             help="The geonanme id for made the matching with osm entities.")
 
     def handle(self, geoname_id, *args, **options):
-        # try:
+        try:
             gn_entity = Geoname.objects.get(pk=geoname_id[0])
             entity = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
                                     longitude=gn_entity.longitude, feature_class=gn_entity.fclass,
@@ -44,7 +44,9 @@ class Command(BaseCommand):
 
                 pertinence_score = get_pertinence_score(match_name=entity['name_matching'],
                                                         match_geographical_coordinates=coordinates_matching,
-                                                        match_type=entity['type_matching'])
+                                                        match_type=entity['type_matching'],
+                                                        gn_feature_code=gn_entity.fcode,
+                                                        gn_feature_class=gn_entity.fclass)
 
                 correspondence = CorrespondenceEntity(reference_gn=gn_entity.id, reference_osm=entity['entity_osm'].id,
                                                       gn_name=gn_entity.name,
@@ -72,5 +74,5 @@ class Command(BaseCommand):
 
             print("Quantite de matchs: ", len(list_align_entities))
 
-        # except Exception as error:
-        #     raise CommandError(error)
+        except Exception as error:
+            raise CommandError(error)

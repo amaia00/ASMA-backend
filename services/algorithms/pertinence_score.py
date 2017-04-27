@@ -2,9 +2,6 @@ from services.models import ParametersScorePertinence
 
 
 def get_pertinence_score(**kwargs):
-    osm_type_key = kwargs.get('osm_type_key')
-    osm_type_value = kwargs.get('osm_type_value')
-
     gn_feature_code = kwargs.get('gn_feature_code')
     gn_feature_class = kwargs.get('gn_feature_class')
 
@@ -16,8 +13,6 @@ def get_pertinence_score(**kwargs):
     params = []
     try:
         params = ParametersScorePertinence.objects.filter(name='weight_matching',
-                                                          osm_key_type=osm_type_key,
-                                                          osm_value_type=osm_type_value,
                                                           gn_feature_code=gn_feature_code,
                                                           gn_feature_class=gn_feature_class,
                                                           all_types=False).values()[0]
