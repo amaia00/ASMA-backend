@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 from django.core.management.base import BaseCommand, CommandError
-from services.models import Relation, Tag, Node, Way, Geoname, FeatureCode, RELATION, NODE, WAY
+from services.models import Relation, Tag, Node, Way, Geoname, FeatureCode, RELATION, NODE, WAY, ScheduledWork, SCHEDULED_WORK_IMPORTATION_PROCESS, PENDING, ERROR, FINALIZED, INPROGRESS
 import xml.etree.ElementTree as ET
 from util.util import get_name_shape
 from datetime import datetime
+from django.utils import timezone
 
 
 class Command(BaseCommand):
@@ -43,7 +44,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--skip-geonames',
             action='store_true',
-            dest='skip-geonames',
+            dest='skip_geonames',
             default=False,
             help='Skip the importation of the Geonames dump',
         )
@@ -72,28 +73,74 @@ class Command(BaseCommand):
         :param options: 
         :return: 
         """
+        scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_IMPORTATION_PROCESS, status=PENDING)
+
+        scheduled_work.status = INPROGRESS
+        scheduled_work.initial_date = timezone.now()
+        scheduled_work.save()
+        msg = ''
+
         try:
+
             if not options['skip-osm']:
-                for file in file:
-                    begin_process = datetime.now()
-                    self.stdout.write(
-                        self.style.MIGRATE_LABEL("OSM Importation"))
+                begin_process = datetime.now()
+                self.stdout.write(
+                    self.style.MIGRATE_LABEL("OSM Importation"))
 
-                    tree = ET.parse(file)
-                    print("%s INFO: File %s loaded." % (datetime.now(), file))
+                print("%s INFO: File %s loaded." % (datetime.now(), file[0]))
 
-                    root = tree.getroot()
-                    nodes_importation(self, root=root)
-                    ways_importation(self, root=root)
-                    relation_importation(self, root=root)
+                path = []
+                flag_nodes = False
+                flag_ways = False
+                count = 0
+                for event, elem in ET.iterparse(file[0], events=("start", "end")):
+                    if event == 'start':
+                        path.append(elem)
+                    elif event == 'end' and elem.tag == 'node':
+                        nodes_importation(elem, path)
+                        count += 1
 
-                    total_time = datetime.now() - begin_process
+                        elem.clear()
+                        path.clear()
+                    elif event == 'end' and elem.tag == 'way':
+                        if not flag_nodes:
+                            self.stdout.write(
+                                self.style.MIGRATE_HEADING("%s INFO: %d nodes imported." % (datetime.now(), count)))
+                            count = 0
+                            flag_nodes = True
 
-                    self.stdout.write(self.style.SUCCESS('Successfully importation process "%s", '
-                                                         'time the execution de %s' % (file,
-                                                                                       total_time)))
+                        ways_importation(elem, path)
+                        count += 1
 
-            if not options['skip-geonames']:
+                        elem.clear()
+                        path.clear()
+                    elif event == 'end' and elem.tag == 'relation':
+                        if not flag_ways:
+                            self.stdout.write(
+                                self.style.MIGRATE_HEADING("%s INFO: %d ways imported." % (datetime.now(), count)))
+                            count = 0
+                            flag_ways = True
+
+                        relation_importation(elem, path)
+                        count += 1
+
+                        elem.clear()
+                        path.clear()
+
+                self.stdout.write(
+                    self.style.MIGRATE_HEADING("%s INFO: %d relations imported." % (datetime.now(), count)))
+
+                clean_entities_without_name(self)
+                total_time = datetime.now() - begin_process
+
+                scheduled_work.status = FINALIZED
+                scheduled_work.final_date = timezone.now()
+                scheduled_work.save()
+
+                self.stdout.write(self.style.SUCCESS('Successfully importation process "%s", '
+                                                     'time the execution de %s' % (file, total_time)))
+
+            if not options['skip_geonames']:
                 self.stdout.write(
                     self.style.MIGRATE_LABEL("GeoNames Importation"))
 
@@ -110,14 +157,21 @@ class Command(BaseCommand):
 
                 clean_entities_without_name(self)
 
-        except FileNotFoundError:
-            raise CommandError('The file %s doesn\'t exists' % file)
+        except FileNotFoundError as detail:
+            msg = 'The file %s doesn\'t exists. Detail: %s' % (file[0], detail)
 
         except IndexError as detail:
-            print(detail)
-            raise CommandError('Les fields n\'ont pas la meme structure.')
+            msg = str(detail)
+
         except Exception as detail:
-            raise CommandError(detail)
+            msg = str(detail)
+
+        finally:
+            scheduled_work.status = ERROR
+            scheduled_work.final_date = timezone.now()
+            scheduled_work.save()
+
+            raise CommandError(msg)
 
 
 def geoname_importation(self, file):
@@ -130,7 +184,6 @@ def geoname_importation(self, file):
     """
 
     print("%s INFO: Importation points geographiques." % datetime.now())
-
     #file_object = open(file, 'r')
     count = 0
     with open(file, encoding='utf-8') as file_object:
@@ -177,19 +230,19 @@ def features_importation(file):
     file_object.close()
 
 
-def nodes_importation(self, root):
+def nodes_importation(xml_point, xml_tags):
     """
     Importation des noeuds OSM du fichier XML vers la BD relationnel avec ses tags
     :param root: le root du fichier XML pour parcourir l'arbre
     """
-    count = 0
-    for xml_point in root.iter('node'):
-        point = Node(id=xml_point.get('id'), latitude=xml_point.get('lat'),
-                     longitude=xml_point.get('lon'))
-        point.save()
-        count += 1
 
-        for xml_tag in xml_point.findall('tag'):
+    point = Node(id=xml_point.get('id'), latitude=xml_point.get('lat'),
+                 longitude=xml_point.get('lon'))
+    point.save()
+
+    count_tags = 0
+    for xml_tag in xml_tags:
+        if xml_tag.tag == 'tag':
             """
             On verifie que le tag soit ecrit en anglais et sinon, c'est pas necessaire
             de le garder dans la BD
@@ -198,89 +251,83 @@ def nodes_importation(self, root):
                 tag = Tag(reference=xml_point.get('id'), type=NODE,
                           key=xml_tag.get('k'), value=xml_tag.get('v'))
                 tag.save()
+                count_tags += 1
 
-        if len(xml_point.findall('tag')) > 0:
-            print("%s INFO: %d tags imported." % (datetime.now(),
-                                                  len(xml_point.findall('tag'))))
-
-    self.stdout.write(
-        self.style.MIGRATE_HEADING("%s INFO: %d nodes imported." % (datetime.now(), count)))
+    if count_tags > 0:
+        print("%s INFO: %d tags imported." % (datetime.now(), count_tags))
 
 
-def ways_importation(self, root):
+def ways_importation(xml_way, xml_way_childs):
     """
     Importation des WAYs de OSM, avec ses tags et ses relations avec les noeuds
     :param root: le root du fichier XML pour parcourir l'arbre
     :return:
     """
-    count = 0
-    for xml_way in root.iter('way'):
-        way = Way(id=xml_way.get('id'))
-        way.save()
-        count += 1
 
-        for xml_sub_point in xml_way.findall('nd'):
-            Node.objects.filter(pk=xml_sub_point.get('ref')) \
+    way = Way(id=xml_way.get('id'))
+    way.save()
+
+    count_tag = 0
+    count_nodes = 0
+    for xml_child in xml_way_childs:
+        if xml_child.tag == 'nd':
+            Node.objects.filter(pk=xml_child.get('ref')) \
                 .update(way_reference=xml_way.get('id'))
+            count_nodes += 1
+        elif xml_child.tag == 'tag' and not another_language(xml_child.get('k')):
+            tag = Tag(reference=xml_way.get('id'), type=WAY,
+                      key=xml_child.get('k'), value=xml_child.get('v'))
+            tag.save()
+            count_tag += 1
 
-        for xml_tag in xml_way.findall('tag'):
-            if not another_language(xml_tag.get('k')):
-                tag = Tag(reference=xml_way.get('id'), type=WAY,
-                          key=xml_tag.get('k'), value=xml_tag.get('v'))
-                tag.save()
+    if count_tag > 0:
+        print("%s INFO: %d tags imported." % (datetime.now(),
+                                              len(xml_way.findall('tag'))))
 
-        if len(xml_way.findall('tag')) > 0:
-            print("%s INFO: %d tags imported." % (datetime.now(),
-                                                  len(xml_way.findall('tag'))))
-
-        if len(xml_way.findall('nd')) > 0:
-            print("%s INFO: %d noeuds imported." % (datetime.now(),
-                                                    len(xml_way.findall('nd'))))
-
-    self.stdout.write(
-        self.style.MIGRATE_HEADING("%s INFO: %d ways imported." % (datetime.now(), count)))
+    if count_nodes > 0:
+        print("%s INFO: %d noeuds imported." % (datetime.now(),
+                                                len(xml_way.findall('nd'))))
 
 
-def relation_importation(self, root):
+def relation_importation(xml_relation, xml_childs):
     """
     Importation des relations OSM vers la BD relationnel, avec ses tags et membres.
     :param root:
     :return:
     """
-    count = 0
-    for xml_relation in root.iter('relation'):
-        relation = Relation(id=xml_relation.get('id'), role=xml_relation.get('role') or '')
-        relation.save()
-        count += 1
 
-        for xml_tag in xml_relation.findall('tag'):
-            if not another_language(xml_tag.get('k')):
-                tag = Tag(reference=xml_relation.get('id'), type=RELATION,
-                          key=xml_tag.get('k'), value=xml_tag.get('v'))
-                tag.save()
+    relation = Relation(id=xml_relation.get('id'), role=xml_relation.get('role') or '')
+    relation.save()
 
-        print("%s INFO: %d tags imported." % (datetime.now(),
-                                              len(xml_relation.findall('tag'))))
+    count_tag = 0
+    count_member = 0
+    for xml_child in xml_childs:
+        if xml_child.tag == 'tag' and not another_language(xml_child.get('k')):
+            tag = Tag(reference=xml_relation.get('id'), type=RELATION,
+                      key=xml_child.get('k'), value=xml_child.get('v'))
+            tag.save()
 
-        for xml_member in xml_relation.findall('member'):
-            if xml_member.get('type') == 'node':
-                Node.objects.filter(pk=xml_member.get('ref')) \
+            count_tag += 1
+        elif xml_child.tag == 'member':
+            if xml_child.get('type') == 'node':
+                Node.objects.filter(pk=xml_child.get('ref')) \
                     .update(relation_reference=xml_relation.get('id'),
-                            role=xml_member.get('role'))
-            elif xml_member.get('type') == 'way':
-                Way.objects.filter(pk=xml_member.get('ref')) \
+                            role=xml_child.get('role'))
+            elif xml_child.get('type') == 'way':
+                Way.objects.filter(pk=xml_child.get('ref')) \
                     .update(relation_reference=xml_relation.get('id'),
-                            role=xml_member.get('role'))
-            elif xml_member.get('type') == 'relation':
-                Relation.objects.filter(pk=xml_member.get('ref')) \
+                            role=xml_child.get('role'))
+            elif xml_child.get('type') == 'relation':
+                Relation.objects.filter(pk=xml_child.get('ref')) \
                     .update(relation_reference=xml_relation.get('id'),
-                            role=xml_member.get('role'))
+                            role=xml_child.get('role'))
+            count_member += 1
 
-        print("%s INFO: %d members imported." % (datetime.now(),
-                                                 len(xml_relation.findall('member'))))
+    print("%s INFO: %d tags imported." % (datetime.now(), count_tag))
+    print("%s INFO: %d members imported." % (datetime.now(), count_member))
 
-    self.stdout.write(
-        self.style.MIGRATE_HEADING("%s INFO: %d relations imported." % (datetime.now(), count)))
+    # self.stdout.write(
+    #     self.style.MIGRATE_HEADING("%s INFO: %d relations imported." % (datetime.now(), count)))
 
 
 def clean_entities_without_name(self):

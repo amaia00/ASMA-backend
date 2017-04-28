@@ -5,7 +5,7 @@ from django.conf import settings
 from .permissions import ReadOnlyPermission
 from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geoname, \
     FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, \
-    ScheduledWork, SCHEDULED_WORK_CORRESPONDENCE_TYPE, SCHEDULED_WORK_IMPORTATION_PROCESS, VALIDE, INVALIDE
+    ScheduledWork, VALIDE, INVALIDE
 from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationSerializer, \
     CorrespondenceValideSerializer, CorrespondenceEntitySerializer, ParameterSerializer, GeonameSerializer,\
     FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
@@ -14,6 +14,7 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.contrib.auth import authenticate, login
 from rest_framework.renderers import JSONRenderer
 from services.classes.thread import BackgroundProcess
+import random
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -270,18 +271,18 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
 
     def create(self, request, **kwargs):
         print("POST method")
+
+        request.data['process_id'] = random.randint(1, 10)
         serializer = ScheduledWorkSerializer(data=request.data)
+
         if serializer.is_valid():
             serializer.save()
             print("ScheduledWork created")
 
-            if request.data['name'] == SCHEDULED_WORK_CORRESPONDENCE_TYPE:
-                thread = BackgroundProcess(thread_id=1, name=request.data['name'], process=request.data['name'])
-                thread.start()
-            elif request.data['name'] == SCHEDULED_WORK_IMPORTATION_PROCESS:
-                thread = BackgroundProcess(thread_id=1, name=request.data['name'], process=request.data['name'],
-                                           positional_params=request.data['file_name'], others_params=request.data[' bi'])
-                thread.start()
+            thread = BackgroundProcess(thread_id=request.data['process_id'], name=request.data['name'],
+                                       process=request.data['name'], positional_params=request.data['file_name'],
+                                       others_params='skip_geonames')
+            thread.start()
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -289,6 +290,7 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
 
 
 class ImportationView(views.APIView):
+
     def post(self, request):
         serializer = ScheduledWorkSerializer(data=request.data)
         if serializer.is_valid():
@@ -304,12 +306,10 @@ class ImportationView(views.APIView):
 class LoginView(views.APIView):
 
     def post(self, request):
-
         username = request.POST['username']
         password = request.POST['password']
 
         user = authenticate(username=username, password=password)
-
         if user:
 
             if user.is_active:
@@ -322,6 +322,7 @@ class LoginView(views.APIView):
 
 
 class ObtainAuthToken(views.APIView):
+
     throttle_classes = ()
     permission_classes = ()
     parser_classes = (
