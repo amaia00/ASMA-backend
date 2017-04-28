@@ -7,7 +7,6 @@ from django.core.management import call_command
 class BackgroundProcess(threading.Thread):
 
     def __init__(self, **kwargs):
-        print("BackgroundProcess initialized")
         threading.Thread.__init__(self)
         self.threadID = kwargs.get('thread_id')
         self.name = kwargs.get('name')
@@ -18,7 +17,6 @@ class BackgroundProcess(threading.Thread):
 
     def run(self):
         try:
-            print("BackgroundProcess called")
             if self.process in (SCHEDULED_WORK_CORRESPONDENCE_TYPE, SCHEDULED_WORK_CORRESPONDENCE_PROCESS):
                 call_command(self.process)
             elif self.process == SCHEDULED_WORK_IMPORTATION_PROCESS:

@@ -1,11 +1,7 @@
 DROP DATABASE TER;
-
 CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin123'; 
-
 CREATE DATABASE TER CHARACTER SET UTF8;
-
 GRANT ALL PRIVILEGES ON TER.* TO admin@localhost;
-
 FLUSH PRIVILEGES;
 
 
@@ -41,8 +37,6 @@ mysql.server start
 TRUNCATE TABLE services_correspondencevalide
 TRUNCATE TABLE services_correspondenceinvalide
 TRUNCATE TABLE services_correspondenceentity
-
-
 
 
 ALTER TABLE TER.services_geoname MODIFY COLUMN name VARCHAR(10000)

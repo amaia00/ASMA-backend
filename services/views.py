@@ -270,14 +270,11 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def create(self, request, **kwargs):
-        print("POST method")
-
-        request.data['process_id'] = random.randint(1, 10)
+        request.data['process_id'] = random.randint(1, 100)
         serializer = ScheduledWorkSerializer(data=request.data)
 
         if serializer.is_valid():
             serializer.save()
-            print("ScheduledWork created")
 
             thread = BackgroundProcess(thread_id=request.data['process_id'], name=request.data['name'],
                                        process=request.data['name'], positional_params=request.data['file_name'],
@@ -287,21 +284,6 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class ImportationView(views.APIView):
-
-    def post(self, request):
-        serializer = ScheduledWorkSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            BackgroundProcess(thread_id=1, name="importation", process="importation",
-                              positional_params=request.data['file_name'], provider=request.data['provider'])
-
-            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
 
 class LoginView(views.APIView):
 
