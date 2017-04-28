@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import Node, Tag, Way, Relation, Parameters, CorrespondenceEntity, CorrespondenceValide, Geonames, \
-    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, ScheduledWork
-from rest_framework.renderers import JSONRenderer
+    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, ScheduledWork, CountryImported
 
 
 class TagSerializer(serializers.HyperlinkedModelSerializer):
@@ -99,3 +98,9 @@ class ScheduledWorkSerializer(serializers.HyperlinkedModelSerializer):
         model = ScheduledWork
         fields = ('id', 'name', 'total_rows', 'affected_rows', 'error_rows', 'file_name', 'provider','status',
                   'initial_date', 'final_date', 'process_id')
+
+
+class CountryImportedSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = CountryImported
+        fields = ('name', 'date')

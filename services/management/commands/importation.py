@@ -78,12 +78,12 @@ class Command(BaseCommand):
         scheduled_work.status = INPROGRESS
         scheduled_work.initial_date = timezone.now()
         scheduled_work.save()
-        msg = ''
+        begin_process = datetime.now()
 
         try:
 
             if not options['skip-osm']:
-                begin_process = datetime.now()
+
                 self.stdout.write(
                     self.style.MIGRATE_LABEL("OSM Importation"))
 
@@ -131,14 +131,7 @@ class Command(BaseCommand):
                     self.style.MIGRATE_HEADING("%s INFO: %d relations imported." % (datetime.now(), count)))
 
                 clean_entities_without_name(self)
-                total_time = datetime.now() - begin_process
 
-                scheduled_work.status = FINALIZED
-                scheduled_work.final_date = timezone.now()
-                scheduled_work.save()
-
-                self.stdout.write(self.style.SUCCESS('Successfully importation process "%s", '
-                                                     'time the execution de %s' % (file, total_time)))
 
             if not options['skip_geonames']:
                 self.stdout.write(
@@ -157,21 +150,21 @@ class Command(BaseCommand):
 
                 clean_entities_without_name(self)
 
-        except FileNotFoundError as detail:
-            msg = 'The file %s doesn\'t exists. Detail: %s' % (file[0], detail)
+            total_time = datetime.now() - begin_process
 
-        except IndexError as detail:
-            msg = str(detail)
+            scheduled_work.status = FINALIZED
+            scheduled_work.final_date = timezone.now()
+            scheduled_work.save()
 
-        except Exception as detail:
-            msg = str(detail)
+            self.stdout.write(self.style.SUCCESS('Successfully importation process "%s", '
+                                                 'time the execution de %s' % (file, total_time)))
 
-        finally:
+        except (FileNotFoundError, IndexError, Exception) as detail:
             scheduled_work.status = ERROR
             scheduled_work.final_date = timezone.now()
             scheduled_work.save()
 
-            raise CommandError(msg)
+            raise CommandError(detail)
 
 
 def geoname_importation(self, file):
@@ -325,9 +318,6 @@ def relation_importation(xml_relation, xml_childs):
 
     print("%s INFO: %d tags imported." % (datetime.now(), count_tag))
     print("%s INFO: %d members imported." % (datetime.now(), count_member))
-
-    # self.stdout.write(
-    #     self.style.MIGRATE_HEADING("%s INFO: %d relations imported." % (datetime.now(), count)))
 
 
 def clean_entities_without_name(self):

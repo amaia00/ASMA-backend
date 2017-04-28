@@ -5,9 +5,9 @@ from django.conf import settings
 from .permissions import ReadOnlyPermission
 from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geonames, \
     FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, \
-    ScheduledWork, VALIDE, INVALIDE
+    ScheduledWork, VALIDE, INVALIDE, SCHEDULED_WORK_IMPORTATION_PROCESS, CountryImported
 from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationSerializer, \
-    CorrespondenceValideSerializer, CorrespondenceEntitySerializer, ParameterSerializer, GeonameSerializer,\
+    CorrespondenceValideSerializer, CorrespondenceEntitySerializer, ParameterSerializer, GeonameSerializer, \
     FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
     CorrespondenceInvalideSerializer, ParametersScorePertinenceSerializer, ScheduledWorkSerializer
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -58,7 +58,7 @@ class GeonamesViewSet(viewsets.ModelViewSet):
 class FeatureCodeViewSet(viewsets.ModelViewSet):
     queryset = FeatureCode.objects.all()
     serializer_class = FeatureCodeSerializer
-    permission_classes = (ReadOnlyPermission, )
+    permission_classes = (ReadOnlyPermission,)
 
 
 class ParametersViewSet(viewsets.ModelViewSet):
@@ -115,13 +115,13 @@ class ParametersScorePertinenceHistoryViewSet(mixins.ListModelMixin, mixins.Retr
 
 
 class CorrespondenceEntityView(viewsets.ViewSet):
-
     def list(self, request, format=None):
 
         if request.GET.get('osm') and request.GET.get('gn'):
             try:
                 correspondence = CorrespondenceEntity.objects.filter(reference_osm=int(request.GET.get('osm')),
-                                                                  reference_gn=int(request.GET.get('gn')))
+                                                                     reference_gn=int(request.GET.get('gn'))).order_by(
+                    '-pertinence_score')
 
                 serializer = CorrespondenceEntitySerializer(correspondence, many=True)
                 print("SERIALIZER DATA: ", correspondence)
@@ -131,7 +131,8 @@ class CorrespondenceEntityView(viewsets.ViewSet):
 
         elif request.GET.get('gn'):
             try:
-                correspondence = CorrespondenceEntity.objects.filter(reference_gn=int(request.GET.get('gn')))
+                correspondence = CorrespondenceEntity.objects.filter(reference_gn=int(request.GET.get('gn'))).order_by(
+                    '-pertinence_score')
                 serializer = CorrespondenceEntitySerializer(correspondence, many=True)
 
             except CorrespondenceEntity.DoesNotExist:
@@ -139,7 +140,8 @@ class CorrespondenceEntityView(viewsets.ViewSet):
 
         elif request.GET.get('osm'):
             try:
-                correspondence = CorrespondenceEntity.objects.filter(reference_osm=int(request.GET.get('osm')))
+                correspondence = CorrespondenceEntity.objects.filter(
+                    reference_osm=int(request.GET.get('osm'))).order_by('-pertinence_score')
 
                 serializer = CorrespondenceEntitySerializer(correspondence, many=True)
 
@@ -147,8 +149,8 @@ class CorrespondenceEntityView(viewsets.ViewSet):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            correspondences = CorrespondenceEntity.objects.filter(name_matching__gt=0, coordinates_matching__gt=0,
-                                                                  type_matching__gt=0).all()
+            correspondences = CorrespondenceEntity.objects.filter(similarity_name__gt=0, similarity_coordinates__gt=0,
+                                                                  similarity_type__gt=0).all()
             paginator = Paginator(correspondences, settings.REST_FRAMEWORK['PAGE_SIZE'])
             page = request.GET.get('page')
 
@@ -167,21 +169,20 @@ class CorrespondenceEntityView(viewsets.ViewSet):
 
 
 class CorrespondenceValideView(viewsets.ViewSet):
-
     def list(self, request, format=None):
 
         # http://127.0.0.1:8000/correspondence-valide/?osm=194554955&gn=822469
         if request.GET.get('osm') and request.GET.get('gn'):
             try:
                 correspondence = CorrespondenceValide.objects.get(reference_osm=int(request.GET.get('osm')),
-                                                              reference_gn=int(request.GET.get('gn')))
+                                                                  reference_gn=int(request.GET.get('gn')))
             except CorrespondenceValide.DoesNotExist:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
             serializer = CorrespondenceValideSerializer(correspondence)
 
         else:
-            #http://127.0.0.1:8000/correspondence-valide
+            # http://127.0.0.1:8000/correspondence-valide
             correspondences = CorrespondenceValide.objects.all()
             serializer = CorrespondenceValideSerializer(correspondences, many=True)
 
@@ -297,7 +298,7 @@ class CorrespondenceTypesViewSet(viewsets.ModelViewSet):
 
     queryset = CorrespondenceTypes.objects.all()
     serializer_class = CorrespondenceTypesSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
 class CorrespondenceTypesCloseViewSet(viewsets.ModelViewSet):
@@ -314,11 +315,22 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
         request.data['process_id'] = random.randint(1, 100)
         serializer = ScheduledWorkSerializer(data=request.data)
 
+        if request.data.get('name', '') == SCHEDULED_WORK_IMPORTATION_PROCESS and not request.data.get('country_name'):
+            raise Exception("Country name parameter required")
+
+        if request.data.get('name', '') == SCHEDULED_WORK_IMPORTATION_PROCESS:
+            count = CountryImported.objects.filter(country_name=request.data.get('country_name', '').upper()).count()
+            if count > 0:
+                raise Exception("The country had already imported")
+            else:
+                country_imported = CountryImported(country_name=request.data.get('country_name'))
+                country_imported.save()
+
         if serializer.is_valid():
             serializer.save()
 
-            thread = BackgroundProcess(thread_id=request.data['process_id'], name=request.data['name'],
-                                       process=request.data['name'],
+            thread = BackgroundProcess(thread_id=request.data.get('process_id'), name=request.data.get('name'),
+                                       process=request.data.get('name'),
                                        positional_params=request.data.get('file_name'),
                                        others_params='skip_geonames')
             thread.start()
@@ -326,4 +338,3 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
