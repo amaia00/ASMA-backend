@@ -1,9 +1,9 @@
-from rest_framework import viewsets, permissions, views, status, parsers
+from rest_framework import viewsets, permissions, views, status, parsers, mixins
 from rest_framework.response import Response
 from rest_framework.request import Request
 from django.conf import settings
 from .permissions import ReadOnlyPermission
-from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geoname, \
+from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geonames, \
     FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, \
     ScheduledWork, VALIDE, INVALIDE
 from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationSerializer, \
@@ -49,8 +49,8 @@ class RelationViewSet(viewsets.ModelViewSet):
     permission_classes = (ReadOnlyPermission,)
 
 
-class GeonameViewSet(viewsets.ModelViewSet):
-    queryset = Geoname.objects.all()
+class GeonamesViewSet(viewsets.ModelViewSet):
+    queryset = Geonames.objects.all()
     serializer_class = GeonameSerializer
     permission_classes = (ReadOnlyPermission,)
 
@@ -71,6 +71,47 @@ class ParametersScorePertinenceViewSet(viewsets.ModelViewSet):
     queryset = ParametersScorePertinence.objects.all()
     serializer_class = ParametersScorePertinenceSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        queryset = ParametersScorePertinence.objects.filter(active=1).all()
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        if request.data['all_types'] == 1:
+            ParametersScorePertinence.objects.filter(all_types=1).update(active=0)
+        else:
+            ParametersScorePertinence.objects.filter(gn_feature_class=request.data['gn_feature_class'],
+                                                     gn_feature_code=request.data['gn_feature_code']).update(active=0)
+
+        serializer = ParametersScorePertinenceSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ParametersScorePertinenceHistoryViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                                              viewsets.GenericViewSet):
+    queryset = ParametersScorePertinence.objects.all()
+    serializer_class = ParametersScorePertinenceSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        all_types = self.request.query_params.get('all_types', None)
+        gn_feature_class = self.request.query_params.get('gn_feature_class', None)
+        gn_feature_code = self.request.query_params.get('gn_feature_code', None)
+
+        if all_types == 1:
+            queryset = ParametersScorePertinence.objects.filter(active=0, all_types=all_types).all().order_by('-date')
+
+        elif gn_feature_class is not None:
+            queryset = ParametersScorePertinence.objects.filter(active=0, gn_feature_class=gn_feature_class,
+                                                                gn_feature_code=gn_feature_code).all().order_by('-date')
+        else:
+            queryset = ParametersScorePertinence.objects.filter(active=0).order_by('-date')
+
+        return queryset
 
 
 class CorrespondenceEntityView(viewsets.ViewSet):
@@ -277,7 +318,8 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
             serializer.save()
 
             thread = BackgroundProcess(thread_id=request.data['process_id'], name=request.data['name'],
-                                       process=request.data['name'], positional_params=request.data['file_name'],
+                                       process=request.data['name'],
+                                       positional_params=request.data.get('file_name'),
                                        others_params='skip_geonames')
             thread.start()
 
@@ -285,48 +327,3 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class LoginView(views.APIView):
-
-    def post(self, request):
-        username = request.POST['username']
-        password = request.POST['password']
-
-        user = authenticate(username=username, password=password)
-        if user:
-
-            if user.is_active:
-                login(request, user)
-                return Response(user, status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(status=status.HTTP_401_UNAUTHORIZED)
-        else:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-
-class ObtainAuthToken(views.APIView):
-
-    throttle_classes = ()
-    permission_classes = ()
-    parser_classes = (
-        parsers.FormParser,
-        parsers.MultiPartParser,
-        parsers.JSONParser,
-    )
-
-    renderer_classes = (JSONRenderer,)
-
-    def post(self, request):
-        username = request.POST['username']
-        password = request.POST['password']
-
-        user = authenticate(username=username, password=password)
-
-        if user:
-            if user.is_active:
-                login(request, user)
-
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response(status=status.HTTP_401_UNAUTHORIZED)
-        else:
-            return Response(status=status.HTTP_403_FORBIDDEN)

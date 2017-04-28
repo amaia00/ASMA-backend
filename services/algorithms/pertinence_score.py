@@ -12,20 +12,21 @@ def get_pertinence_score(**kwargs):
 
     params = []
     try:
-        params = ParametersScorePertinence.objects.filter(name='weight_matching',
-                                                          gn_feature_code=gn_feature_code,
-                                                          gn_feature_class=gn_feature_class,
-                                                          all_types=False).values()[0]
-    except IndexError:
-        params = ParametersScorePertinence.objects.filter(name='weight_matching_global',
-                                                          all_types=True).values()[0]
+        params = ParametersScorePertinence.objects.get(name='weight_matching',
+                                                       gn_feature_code=gn_feature_code,
+                                                       gn_feature_class=gn_feature_class,
+                                                       all_types=False,
+                                                       active=True)
+    except ParametersScorePertinence.DoesNotExist:
+        params = ParametersScorePertinence.objects.get(name='weight_matching_global',
+                                                       all_types=True, active=True)
 
-    weight_geographical_coordinates = float(params['weight_coordinates'])
-    weight_name_matching = float(params['weight_name'])
-    weight_type_matching = float(params['weight_type'])
+    weight_geographical_coordinates = float(params.weight_coordinates)
+    weight_name_matching = float(params.weight_name)
+    weight_type_matching = float(params.weight_type)
 
     match_name_pertinence = match_name * weight_name_matching
     match_type_pertinence = match_type * weight_type_matching
     match_geographical_coordinates_pertinence = match_geographical_coordinates * weight_geographical_coordinates
 
-    return match_name_pertinence + match_type_pertinence + match_geographical_coordinates_pertinence
+    return params, match_name_pertinence + match_type_pertinence + match_geographical_coordinates_pertinence

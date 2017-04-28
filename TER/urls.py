@@ -25,10 +25,11 @@ router.register(r'tags', views.TagViewSet)
 router.register(r'points', views.PointViewSet)
 router.register(r'ways', views.WayViewSet)
 router.register(r'relations', views.RelationViewSet)
-router.register(r'geoname', views.GeonameViewSet)
+router.register(r'geonames', views.GeonamesViewSet)
 router.register(r'feature-code', views.FeatureCodeViewSet)
 router.register(r'parameters', views.ParametersViewSet)
 router.register(r'parameters-score-pertinence', views.ParametersScorePertinenceViewSet)
+router.register(r'parameters-score-pertinence-history', views.ParametersScorePertinenceHistoryViewSet)
 router.register(r'entity-osm-details/(?P<id>.+)/$', views.EntityOSMDetails, base_name='entity-osm-details')
 
 router.register(r'correspondence', views.CorrespondenceEntityView, base_name='correspondence')
@@ -43,7 +44,5 @@ urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^admin/', admin.site.urls),
     url(r'^api-auth/',include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^api-token-auth/', authviews.obtain_auth_token),
-    url(r'importation', views.ImportationView.as_view()),
-    url(r'login', views.ObtainAuthToken.as_view())
+    url(r'^api-token-auth/', authviews.obtain_auth_token)
 ]

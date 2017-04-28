@@ -99,7 +99,7 @@ class Relation(models.Model):
     checked_name = models.BooleanField(default=False)
 
 
-class Geoname(models.Model):
+class Geonames(models.Model):
     id = models.BigIntegerField(primary_key=True)
     name = models.CharField(max_length=200)
     ascii_name = models.CharField(max_length=200)
@@ -153,13 +153,14 @@ class CorrespondenceEntity(models.Model):
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     osm_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
-    name_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
-    type_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
-    coordinates_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    similarity_name = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    similarity_type = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    similarity_coordinates = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
     pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, default=0, null=True)
     date_matching = models.DateTimeField(auto_now_add=True, blank=True)
     validation = models.IntegerField(choices=STRUCTURE_CORRESPONDENCES, default=CALCULE)
+    weight_params = models.ForeignKey('ParametersScorePertinence', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         unique_together = ('reference_gn', 'reference_osm')
@@ -187,12 +188,13 @@ class CorrespondenceValide(models.Model):
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     osm_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
-    name_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
-    type_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
-    coordinates_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    similarity_name = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    similarity_type = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    similarity_coordinates = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
     pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, default=0, null=True)
     date_invalidation = models.DateTimeField(default=timezone.now)
+    weight_params = models.ForeignKey('ParametersScorePertinence', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         unique_together = ('reference_gn', 'reference_osm')
@@ -220,12 +222,13 @@ class CorrespondenceInvalide(models.Model):
     osm_latitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
     osm_longitude = models.DecimalField(decimal_places=7, max_digits=11, default=0)
 
-    name_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
-    type_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
-    coordinates_matching = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    similarity_name = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    similarity_type = models.DecimalField(decimal_places=3, max_digits=4, default=0)
+    similarity_coordinates = models.DecimalField(decimal_places=3, max_digits=4, default=0)
 
     pertinence_score = models.DecimalField(decimal_places=3, max_digits=4, default=0, null=True)
     date_invalidation = models.DateTimeField(default=timezone.now)
+    weight_params = models.ForeignKey('ParametersScorePertinence', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         unique_together = ('reference_gn', 'reference_osm')
@@ -290,4 +293,10 @@ class ScheduledWork(models.Model):
     initial_date = models.DateTimeField(blank=True, default=timezone.now)
     final_date = models.DateTimeField(null=True)
     process_id = models.IntegerField(default=0)
+
+
+class CountryImported(models.Model):
+    country_name = models.CharField(primary_key=True, max_length=100)
+    date = models.DateTimeField(blank=True, default=timezone.now)
+
 

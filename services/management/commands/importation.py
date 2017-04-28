@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from django.core.management.base import BaseCommand, CommandError
-from services.models import Relation, Tag, Node, Way, Geoname, FeatureCode, RELATION, NODE, WAY, ScheduledWork, SCHEDULED_WORK_IMPORTATION_PROCESS, PENDING, ERROR, FINALIZED, INPROGRESS
+from services.models import Relation, Tag, Node, Way, Geonames, FeatureCode, RELATION, NODE, WAY, ScheduledWork, SCHEDULED_WORK_IMPORTATION_PROCESS, PENDING, ERROR, FINALIZED, INPROGRESS
 import xml.etree.ElementTree as ET
 from util.util import get_name_shape
 from datetime import datetime
@@ -195,13 +195,13 @@ def geoname_importation(self, file):
                 elevation = 0
 
             try:
-                geoname = Geoname(id=fields[0], name=fields[1], ascii_name=fields[2],
-                                  alternative_name=fields[3].encode('utf-8'), latitude=fields[4],
-                                  longitude=fields[5], fclass=fields[6], fcode=fields[7],
-                                  cc2=fields[9], admin1=fields[10], admin2=fields[11],
-                                  admin3=fields[12], admin4=fields[13], population=fields[14],
-                                  elevation=elevation, gtopo30=fields[16], timezone=fields[17],
-                                  moddate=fields[18])
+                geoname = Geonames(id=fields[0], name=fields[1], ascii_name=fields[2],
+                                   alternative_name=fields[3].encode('utf-8'), latitude=fields[4],
+                                   longitude=fields[5], fclass=fields[6], fcode=fields[7],
+                                   cc2=fields[9], admin1=fields[10], admin2=fields[11],
+                                   admin3=fields[12], admin4=fields[13], population=fields[14],
+                                   elevation=elevation, gtopo30=fields[16], timezone=fields[17],
+                                   moddate=fields[18])
                 geoname.save()
                 count += 1
             except Exception as error:

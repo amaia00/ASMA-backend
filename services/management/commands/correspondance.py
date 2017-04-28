@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from django.core.management.base import BaseCommand, CommandError
-from services.models import Geoname, CorrespondenceEntity, FeatureCode, NODE
+from services.models import Geonames, CorrespondenceEntity, FeatureCode, NODE
 from services.classes.classes import EntityGeoNames
 from services.algorithms.algorithm_blocking import blocking_function
 from services.algorithms.algorithm_align import align_algorithme
@@ -24,7 +24,7 @@ class Command(BaseCommand):
 
     def handle(self, geoname_id, *args, **options):
         try:
-            gn_entity = Geoname.objects.get(pk=geoname_id[0])
+            gn_entity = Geonames.objects.get(pk=geoname_id[0])
             entity = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
                                     longitude=gn_entity.longitude, feature_class=gn_entity.fclass,
                                     feature_code=gn_entity.fcode)
@@ -42,11 +42,12 @@ class Command(BaseCommand):
                 position_osm = PositionGPS(latitude_osm, longitude_osm)
                 coordinates_matching = matching_coordinates(position_gn, position_osm)
 
-                pertinence_score = get_pertinence_score(match_name=entity['name_matching'],
-                                                        match_geographical_coordinates=coordinates_matching,
-                                                        match_type=entity['type_matching'],
-                                                        gn_feature_code=gn_entity.fcode,
-                                                        gn_feature_class=gn_entity.fclass)
+                weight_param, pertinence_score = get_pertinence_score(match_name=entity['name_matching'],
+                                                                       match_geographical_coordinates=
+                                                                       coordinates_matching,
+                                                                       match_type=entity['type_matching'],
+                                                                       gn_feature_code=gn_entity.fcode,
+                                                                       gn_feature_class=gn_entity.fclass)
 
                 correspondence = CorrespondenceEntity(reference_gn=gn_entity.id, reference_osm=entity['entity_osm'].id,
                                                       gn_name=gn_entity.name,
@@ -62,11 +63,11 @@ class Command(BaseCommand):
                                                       osm_value_type=getattr(entity['type_tag_osm'], 'value', ''),
                                                       osm_latitude=latitude_osm,
                                                       osm_longitude=longitude_osm,
-                                                      name_matching=entity['name_matching'],
-                                                      type_matching=entity['type_matching'],
-                                                      coordinates_matching=coordinates_matching,
-                                                      pertinence_score=pertinence_score)
-
+                                                      similarity_name=entity['name_matching'],
+                                                      similarity_type=entity['type_matching'],
+                                                      similarity_coordinates=coordinates_matching,
+                                                      pertinence_score=pertinence_score,
+                                                      weight_params=weight_param)
                 correspondence.save()
 
             gn_entity.correspondence_check = True

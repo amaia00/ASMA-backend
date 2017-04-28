@@ -1,6 +1,6 @@
 # !/usr/bin/env python3
 from django.core.management.base import BaseCommand, CommandError
-from services.models import Geoname, ScheduledWork, PENDING, INPROGRESS, FINALIZED, ERROR, \
+from services.models import Geonames, ScheduledWork, PENDING, INPROGRESS, FINALIZED, ERROR, \
     SCHEDULED_WORK_CORRESPONDENCE_PROCESS
 from datetime import datetime
 from django.core.management import call_command
@@ -19,7 +19,7 @@ class Command(BaseCommand):
                                      (datetime.now())))
         try:
             # TODO correspondence_check=False
-            geoname_entities = Geoname.objects.only('id').filter(correspondence_check=False).values()
+            geoname_entities = Geonames.objects.only('id').filter(correspondence_check=False).values()
             total_rows = geoname_entities.count()
 
             '''
@@ -39,9 +39,8 @@ class Command(BaseCommand):
                     scheduled_work.save()
 
                 except CommandError as error:
-                    self.stdout.write(
-                        self.style.ERROR('%s :Error: %s.Entity id %s' %
-                                                 (datetime.now(), error, geoname_entity['id'])))
+                    raise CommandError('%s :Error: %s.Entity id %s' %
+                                                 (datetime.now(), error, geoname_entity['id']))
                     scheduled_work.error_rows += 1
                     scheduled_work.save()
 

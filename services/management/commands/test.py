@@ -2,7 +2,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from services.classes.classes import PositionGPS
 from util.coordinates_matching import matching_coordinates
-from services.models import Geoname, Tag, ParametersScorePertinence
+from services.models import Geonames, Tag, ParametersScorePertinence
 from services.classes.classes import EntityGeoNames
 from services.algorithms.algorithm_align import match_type_correspondence, match_type_synonyms
 from services.algorithms.algorithm_blocking import blocking_function
@@ -26,7 +26,7 @@ class Command(BaseCommand):
             # coordinates_matching = matching_coordinates(position_gn, position_osm)
             # print(coordinates_matching)
 
-            gn_entity = Geoname.objects.get(pk=3017833)
+            gn_entity = Geonames.objects.get(pk=3017833)
             geoname = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
                                     longitude=gn_entity.longitude, feature_class=gn_entity.fclass,
                                     feature_code=gn_entity.fcode)

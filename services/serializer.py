@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Node, Tag, Way, Relation, Parameters, CorrespondenceEntity, CorrespondenceValide, Geoname, \
+from .models import Node, Tag, Way, Relation, Parameters, CorrespondenceEntity, CorrespondenceValide, Geonames, \
     FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, ScheduledWork
 from rest_framework.renderers import JSONRenderer
 
@@ -30,7 +30,7 @@ class RelationSerializer(serializers.HyperlinkedModelSerializer):
 
 class GeonameSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = Geoname
+        model = Geonames
         fields = ('id', 'name', 'ascii_name', 'alternative_name', 'latitude', 'longitude',
                   'fclass', 'fcode', 'cc2', 'admin1', 'admin2', 'admin3', 'admin4', 'population',
                   'elevation', 'gtopo30', 'timezone', 'moddate')
@@ -48,7 +48,7 @@ class CorrespondenceEntitySerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'reference_gn', 'reference_osm',
                   'gn_name', 'gn_feature_class', 'gn_feature_code', 'gn_feature_name', 'gn_latitude', 'gn_longitude',
                   'osm_name', 'osm_key_type', 'osm_value_type', 'osm_latitude', 'osm_longitude', 'osm_shape',
-                  'name_matching', 'type_matching', 'coordinates_matching', 'pertinence_score', 'validation')
+                  'similarity_name', 'similarity_type', 'similarity_coordinates', 'pertinence_score', 'validation')
 
 
 class CorrespondenceValideSerializer(serializers.HyperlinkedModelSerializer):
@@ -57,7 +57,7 @@ class CorrespondenceValideSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'reference_gn', 'reference_osm',
                   'gn_name', 'gn_feature_class', 'gn_feature_code', 'gn_feature_name', 'gn_latitude', 'gn_longitude',
                   'osm_name', 'osm_key_type', 'osm_value_type', 'osm_latitude', 'osm_longitude', 'osm_shape',
-                  'name_matching', 'type_matching', 'coordinates_matching', 'pertinence_score')
+                  'similarity_name', 'similarity_type', 'similarity_coordinates', 'pertinence_score')
 
 
 class CorrespondenceInvalideSerializer(serializers.HyperlinkedModelSerializer):
@@ -66,7 +66,7 @@ class CorrespondenceInvalideSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'reference_gn', 'reference_osm',
                   'gn_name', 'gn_feature_class', 'gn_feature_code', 'gn_feature_name', 'gn_latitude', 'gn_longitude',
                   'osm_name', 'osm_key_type', 'osm_value_type', 'osm_latitude', 'osm_longitude', 'osm_shape',
-                  'name_matching', 'type_matching', 'coordinates_matching', 'pertinence_score')
+                  'similarity_name', 'similarity_type', 'similarity_coordinates', 'pertinence_score')
 
 
 class ParameterSerializer(serializers.HyperlinkedModelSerializer):
