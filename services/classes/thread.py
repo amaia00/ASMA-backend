@@ -20,7 +20,7 @@ class BackgroundProcess(threading.Thread):
             if self.process in (SCHEDULED_WORK_CORRESPONDENCE_TYPE, SCHEDULED_WORK_CORRESPONDENCE_PROCESS):
                 call_command(self.process)
             elif self.process == SCHEDULED_WORK_IMPORTATION_PROCESS:
-                path = Parameters.objects.only('value').get(name='files_directory_path_importation').value
+                path = Parameters.objects.only('value').get(name='directory_path_importation').value
                 call_command(self.process, path + self.positional_params, skip_geonames=True)
 
         except Exception as error:

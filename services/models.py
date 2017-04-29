@@ -255,6 +255,7 @@ class Parameters(models.Model):
     value = models.CharField(max_length=300)
     active = models.BooleanField(default=True)
     description = models.CharField(max_length=200)
+    client_name = models.CharField(max_length=60, default='')
 
 
 class CorrespondenceTypes(models.Model):

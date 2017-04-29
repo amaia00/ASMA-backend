@@ -29,15 +29,17 @@ class Command(BaseCommand):
                 self.style.MIGRATE_HEADING('%s : Correspondences in the set of correspondences valides.' %
                                            (datetime.now())))
 
+            """
+            We select all the valid correspondences with the same type and we add like a close correspondence.
+            """
             cursor = connection.cursor()
-            # types_matching_valide_quantity
             cursor.execute("SELECT v.gn_feature_class, v.gn_feature_code, v.osm_key_type, v.osm_value_type, COUNT(0)" +
                            " FROM services_correspondencevalide v WHERE NOT EXISTS(SELECT st.id FROM " +
                            "services_correspondencetypes st WHERE st.osm_key = v.osm_key_type AND st.osm_value = " +
                            "v.osm_value_type AND st.gn_feature_code = v.gn_feature_code AND st.gn_feature_class = " +
                            "v.gn_feature_class) GROUP BY v.gn_feature_class, v.gn_feature_code, v.osm_key_type, " +
                            "v.osm_value_type HAVING COUNT(0) > (SELECT p.value FROM services_parameters p WHERE " +
-                           " p.name= 'types_matching_valide_quantity')")
+                           " p.name= 'minimun_valides_correspondences_for_types_match')")
 
             all = cursor.fetchall()
             scheduled_work.total_rows += len(all)
@@ -58,13 +60,16 @@ class Command(BaseCommand):
                 self.style.MIGRATE_HEADING('%s : Correspondences in the set of correspondences closes.' %
                                            (datetime.now())))
 
+            """
+            We select all the users' validations between types, and we add like a matching between types.
+            """
             cursor.execute("SELECT v.gn_feature_class, v.gn_feature_code, v.osm_key, v.osm_value, COUNT(0) " +
                            "FROM services_correspondencetypesclose v WHERE NOT EXISTS(SELECT st.id FROM " +
                            "services_correspondencetypes st WHERE st.osm_key = v.osm_key AND st.osm_value = " +
                            "v.osm_value AND st.gn_feature_code = v.gn_feature_code AND st.gn_feature_class = " +
                            "v.gn_feature_class) GROUP BY v.gn_feature_class, v.gn_feature_code, v.osm_key, " +
                            "v.osm_value HAVING COUNT(0) > (SELECT p.value FROM services_parameters p WHERE " +
-                           "p.name= 'types_matching_close_quantity')")
+                           "p.name= 'minimun_users_validation_for_type_match')")
             all = cursor.fetchall()
 
             scheduled_work.total_rows += len(all)

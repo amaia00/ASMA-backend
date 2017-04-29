@@ -50,7 +50,7 @@ def match_name_string(entity_gn, osm_name):
     :param osm_name:
     :return: the level of matching if it is greater or equals to the parameter, otherwise False
     """
-    param_distance_string = float(Parameters.objects.get(name='distance_levenshtein').value)
+    param_distance_string = float(Parameters.objects.get(name='minimun_similarity_name_for_align').value)
 
     value = distance_levenshtein(entity_gn.get_name(), osm_name)
     if value >= param_distance_string:
@@ -69,8 +69,9 @@ def match_type_correspondence(entity_gn, tag_list):
     match_level = 0
     tag_match = ''
 
-    match_complete_param = float(Parameters.objects.get(name="match_type_complete").value)
-    match_close_param = float(Parameters.objects.get(name="match_type_close").value)
+    similarity_type_for_total_match = float(Parameters.objects.get(name="similarity_type_for_total_match").value)
+    similarity_type_for_users_validation = float(Parameters.objects.get(name="similarity_type_for_users_validation")
+                                                 .value)
 
     tag_list = remove_tag_name(tag_list)
 
@@ -81,15 +82,15 @@ def match_type_correspondence(entity_gn, tag_list):
                                                    osm_value=tag.value)
 
         if match:
-            return tag, match_complete_param
+            return tag, similarity_type_for_total_match
 
         match_close = CorrespondenceTypesClose.objects.filter(gn_feature_code=entity_gn.get_feature_code(),
                                                               gn_feature_class=entity_gn.get_feature_class(),
                                                               osm_key=tag.key,
                                                               osm_value=tag.value)
 
-        if match_close and max(match_close_param, match_level) != match_level:
-            (tag_match, match_level) = (tag, max(match_close_param, match_level))
+        if match_close and max(similarity_type_for_users_validation, match_level) != match_level:
+            (tag_match, match_level) = (tag, max(similarity_type_for_users_validation, match_level))
 
     return tag_match, match_level
 
@@ -119,13 +120,17 @@ def match_type_synonyms(entity_gn, tag_list):
     json_object = json.loads(r.text)
     synonyms = json_object["tags"]
 
-    match_level = 0
+    similarity_type_level = 0
     tag_match = ''
 
-    match_type_description_value = float(Parameters.objects.get(name="match_type_description_value").value)
-    match_type_description_key = float(Parameters.objects.get(name="match_type_description_key").value)
-    match_type_synonym_value = float(Parameters.objects.get(name="match_type_synonym_value").value)
-    match_type_synonym_key = float(Parameters.objects.get(name="match_type_synonym_key").value)
+    similarity_type_for_description_in_key = float(Parameters.objects
+                                                   .get(name="similarity_type_for_description_in_key").value)
+    similarity_type_for_description_in_value = float(Parameters.objects
+                                                     .get(name="similarity_type_for_description_in_value").value)
+    similarity_type_for_synonyms_in_value = float(Parameters.objects
+                                                  .get(name="similarity_type_for_synonyms_in_value").value)
+    similarity_type_for_synonyms_in_key = float(Parameters.objects
+                                                .get(name="similarity_type_for_synonyms_in_key").value)
 
     tag_list = remove_tag_name(tag_list)
     for tag in tag_list:
@@ -133,25 +138,30 @@ def match_type_synonyms(entity_gn, tag_list):
         If we found match with the description and the value of one tag OSM
         """
         if feature_code.name == tag.value:
-            match_level = match_type_description_value
-            return tag, match_level
+            similarity_type_level = similarity_type_for_description_in_key
+            return tag, similarity_type_level
 
         """
         If we found match with the description and the key of one tag OSM
         """
-        if feature_code.name == tag.key and match_level < max(match_type_description_key, match_level):
-            (tag_match, match_level) = (tag, max(match_type_description_key, match_level))
+        if feature_code.name == tag.key and similarity_type_level < max(similarity_type_for_description_in_value,
+                                                                        similarity_type_level):
+            (tag_match, similarity_type_level) = (tag, max(similarity_type_for_description_in_value,
+                                                           similarity_type_level))
 
         """
         If we found match with the description synonym and the value of one tag OSM
         """
-        if tag.value in synonyms and match_level < max(match_type_synonym_value, match_level):
-            (tag_match, match_level) = (tag, max(match_type_synonym_value, match_level))
+        if tag.value in synonyms and similarity_type_level < max(similarity_type_for_synonyms_in_value,
+                                                                 similarity_type_level):
+            (tag_match, similarity_type_level) = (tag, max(similarity_type_for_synonyms_in_value,
+                                                           similarity_type_level))
 
         """
         If we found match with the description synonym and the key of one tag OSM
         """
-        if tag.key in synonyms and match_level < max(match_type_synonym_key, match_level):
-            (tag_match, match_level) = (tag, max(match_type_synonym_key, match_level))
+        if tag.key in synonyms and similarity_type_level < max(similarity_type_for_synonyms_in_key,
+                                                               similarity_type_level):
+            (tag_match, similarity_type_level) = (tag, max(similarity_type_for_synonyms_in_key, similarity_type_level))
 
-    return tag_match, match_level
+    return tag_match, similarity_type_level

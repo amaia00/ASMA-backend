@@ -9,7 +9,8 @@ from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, 
 from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationSerializer, \
     CorrespondenceValideSerializer, CorrespondenceEntitySerializer, ParameterSerializer, GeonameSerializer, \
     FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
-    CorrespondenceInvalideSerializer, ParametersScorePertinenceSerializer, ScheduledWorkSerializer
+    CorrespondenceInvalideSerializer, ParametersScorePertinenceSerializer, ScheduledWorkSerializer, \
+    CountryImportedSerializer
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.contrib.auth import authenticate, login
 from rest_framework.renderers import JSONRenderer
@@ -338,3 +339,10 @@ class ScheduledWorkViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CountryImportedView(mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                          viewsets.GenericViewSet):
+    queryset = CountryImported.objects.all()
+    serializer_class = CountryImportedSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)

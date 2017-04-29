@@ -38,6 +38,7 @@ router.register(r'correspondence-types-close', views.CorrespondenceTypesCloseVie
 router.register(r'correspondence-valide', views.CorrespondenceValideView, base_name='correspondence-valide')
 router.register(r'correspondence-invalide', views.CorrespondenceInvalideView,  base_name='correspondence-invalide')
 router.register(r'scheduled-work', views.ScheduledWorkViewSet)
+router.register(r'country-imported', views.CountryImportedView)
 
 
 urlpatterns = [

@@ -71,7 +71,7 @@ class CorrespondenceInvalideSerializer(serializers.HyperlinkedModelSerializer):
 class ParameterSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Parameters
-        fields = ('name', 'value', 'description')
+        fields = ('name', 'value', 'description', 'client_name')
 
 
 class ParametersScorePertinenceSerializer(serializers.HyperlinkedModelSerializer):
@@ -103,4 +103,4 @@ class ScheduledWorkSerializer(serializers.HyperlinkedModelSerializer):
 class CountryImportedSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = CountryImported
-        fields = ('name', 'date')
+        fields = ('country_name', 'date')
