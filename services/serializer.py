@@ -38,7 +38,7 @@ class GeonameSerializer(serializers.HyperlinkedModelSerializer):
 class FeatureCodeSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = FeatureCode
-        fields = ('id', 'code', 'name', 'description')
+        fields = ('code', 'name', 'description')
 
 
 class CorrespondenceEntitySerializer(serializers.HyperlinkedModelSerializer):
