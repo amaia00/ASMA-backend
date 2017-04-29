@@ -89,56 +89,15 @@ class Command(BaseCommand):
 
                 print("%s INFO: File %s loaded." % (datetime.now(), file[0]))
 
-                path = []
-                flag_nodes = False
-                flag_ways = False
-                count = 0
-                for event, elem in ET.iterparse(file[0], events=("start", "end")):
-                    if event == 'start':
-                        path.append(elem)
-                    elif event == 'end' and elem.tag == 'node':
-                        nodes_importation(elem, path)
-                        count += 1
-
-                        elem.clear()
-                        path.clear()
-                    elif event == 'end' and elem.tag == 'way':
-                        if not flag_nodes:
-                            self.stdout.write(
-                                self.style.MIGRATE_HEADING("%s INFO: %d nodes imported." % (datetime.now(), count)))
-                            count = 0
-                            flag_nodes = True
-
-                        ways_importation(elem, path)
-                        count += 1
-
-                        elem.clear()
-                        path.clear()
-                    elif event == 'end' and elem.tag == 'relation':
-                        if not flag_ways:
-                            self.stdout.write(
-                                self.style.MIGRATE_HEADING("%s INFO: %d ways imported." % (datetime.now(), count)))
-                            count = 0
-                            flag_ways = True
-
-                        relation_importation(elem, path)
-                        count += 1
-
-                        elem.clear()
-                        path.clear()
-
-                self.stdout.write(
-                    self.style.MIGRATE_HEADING("%s INFO: %d relations imported." % (datetime.now(), count)))
-
+                osm_importation(self, file[0], scheduled_work)
                 clean_entities_without_name(self)
-
 
             if not options['skip_geonames']:
                 self.stdout.write(
                     self.style.MIGRATE_LABEL("GeoNames Importation"))
 
                 file = options['file2'] or file[0]
-                geoname_importation(self, file)
+                geonames_importation(self, file)
 
                 if not options['skip-features']:
                     file = options['file3']
@@ -167,7 +126,7 @@ class Command(BaseCommand):
             raise CommandError(detail)
 
 
-def geoname_importation(self, file):
+def geonames_importation(self, file):
     """
     This method execute the importation of geonames points.
     Read all the file and save every entity in the database
@@ -177,7 +136,6 @@ def geoname_importation(self, file):
     """
 
     print("%s INFO: Importation points geographiques." % datetime.now())
-    #file_object = open(file, 'r')
     count = 0
     with open(file, encoding='utf-8') as file_object:
         for line in file_object:
@@ -223,10 +181,69 @@ def features_importation(file):
     file_object.close()
 
 
+def osm_importation(self, file, scheduled_work):
+    """
+    
+    :param self: 
+    :param file: 
+    :param scheduled_work: 
+    :return: 
+    """
+    path = []
+    flag_nodes = False
+    flag_ways = False
+    count = 0
+    for event, elem in ET.iterparse(file, events=("start", "end")):
+        try:
+            if event == 'start':
+                path.append(elem)
+
+            elif event == 'end' and elem.tag == 'node':
+                nodes_importation(elem, path)
+                count += 1
+
+            elif event == 'end' and elem.tag == 'way':
+                if not flag_nodes:
+                    self.stdout.write(
+                        self.style.MIGRATE_HEADING("%s INFO: %d nodes imported." % (datetime.now(), count)))
+                    scheduled_work.affected_rows += count
+                    scheduled_work.save()
+                    count = 0
+                    flag_nodes = True
+
+                ways_importation(elem, path)
+                count += 1
+
+            elif event == 'end' and elem.tag == 'relation':
+                if not flag_ways:
+                    self.stdout.write(
+                        self.style.MIGRATE_HEADING("%s INFO: %d ways imported." % (datetime.now(), count)))
+                    scheduled_work.affected_rows += count
+                    scheduled_work.save()
+                    count = 0
+                    flag_ways = True
+
+                relation_importation(elem, path)
+                count += 1
+        except Exception as detail:
+            self.stdout.write(
+                self.style.ERROR("%s ERROR: " + str(detail) % datetime.now()))
+            scheduled_work.error_rows += 1
+            scheduled_work.save()
+
+    scheduled_work.affected_rows += count
+    scheduled_work.save()
+
+    self.stdout.write(
+        self.style.MIGRATE_HEADING("%s INFO: %d relations imported." % (datetime.now(), count)))
+
+
 def nodes_importation(xml_point, xml_tags):
     """
     Importation des noeuds OSM du fichier XML vers la BD relationnel avec ses tags
-    :param root: le root du fichier XML pour parcourir l'arbre
+    :param xml_point: 
+    :param xml_tags: 
+    :return: 
     """
 
     point = Node(id=xml_point.get('id'), latitude=xml_point.get('lat'),
@@ -249,12 +266,16 @@ def nodes_importation(xml_point, xml_tags):
     if count_tags > 0:
         print("%s INFO: %d tags imported." % (datetime.now(), count_tags))
 
+    xml_point.clear()
+    xml_tags.clear()
+
 
 def ways_importation(xml_way, xml_way_childs):
     """
     Importation des WAYs de OSM, avec ses tags et ses relations avec les noeuds
-    :param root: le root du fichier XML pour parcourir l'arbre
-    :return:
+    :param xml_way: 
+    :param xml_way_child: 
+    :return: 
     """
 
     way = Way(id=xml_way.get('id'))
@@ -281,12 +302,16 @@ def ways_importation(xml_way, xml_way_childs):
         print("%s INFO: %d noeuds imported." % (datetime.now(),
                                                 len(xml_way.findall('nd'))))
 
+    xml_way.clear()
+    xml_way_child.clear()
+
 
 def relation_importation(xml_relation, xml_childs):
     """
     Importation des relations OSM vers la BD relationnel, avec ses tags et membres.
-    :param root:
-    :return:
+    :param xml_relation: 
+    :param xml_child: 
+    :return: 
     """
 
     relation = Relation(id=xml_relation.get('id'), role=xml_relation.get('role') or '')
@@ -319,8 +344,16 @@ def relation_importation(xml_relation, xml_childs):
     print("%s INFO: %d tags imported." % (datetime.now(), count_tag))
     print("%s INFO: %d members imported." % (datetime.now(), count_member))
 
+    xml_relation.clear()
+    xml_child.clear()
+
 
 def clean_entities_without_name(self):
+    """
+    
+    :param self: 
+    :return: 
+    """
     count = 0
     fathers_nodes = Node.objects.filter(relation_reference__isnull=True, way_reference__isnull=True, checked_name=False)
     for node in fathers_nodes:
