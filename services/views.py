@@ -103,14 +103,14 @@ class ParametersScorePertinenceHistoryViewSet(mixins.ListModelMixin, mixins.Retr
         gn_feature_class = self.request.query_params.get('gn_feature_class', None)
         gn_feature_code = self.request.query_params.get('gn_feature_code', None)
 
-        if all_types == 1:
-            queryset = ParametersScorePertinence.objects.filter(active=0, all_types=all_types).all().order_by('-date')
+        if all_types:
+            queryset = ParametersScorePertinence.objects.filter(active=0, all_types=all_types).all().order_by('date')
 
         elif gn_feature_class is not None:
             queryset = ParametersScorePertinence.objects.filter(active=0, gn_feature_class=gn_feature_class,
-                                                                gn_feature_code=gn_feature_code).all().order_by('-date')
+                                                                gn_feature_code=gn_feature_code).all().order_by('date')
         else:
-            queryset = ParametersScorePertinence.objects.filter(active=0).order_by('-date')
+            queryset = ParametersScorePertinence.objects.filter(active=0).order_by('date')
 
         return queryset
 
