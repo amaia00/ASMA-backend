@@ -12,13 +12,12 @@ from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationS
     CorrespondenceInvalideSerializer, ParametersScorePertinenceSerializer, ScheduledWorkSerializer, \
     CountryImportedSerializer
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.contrib.auth import authenticate, login
-from rest_framework.renderers import JSONRenderer
 from services.classes.thread import BackgroundProcess
 import random
 
 
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                 viewsets.GenericViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (ReadOnlyPermission,)
@@ -32,31 +31,36 @@ class TagViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class PointViewSet(viewsets.ModelViewSet):
+class PointViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Node.objects.all()
     serializer_class = PointSerializer
     permission_classes = (ReadOnlyPermission,)
 
 
-class WayViewSet(viewsets.ModelViewSet):
+class WayViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                 viewsets.GenericViewSet):
     queryset = Way.objects.all()
     serializer_class = WaySerializer
     permission_classes = (ReadOnlyPermission,)
 
 
-class RelationViewSet(viewsets.ModelViewSet):
+class RelationViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                      viewsets.GenericViewSet):
     queryset = Relation.objects.all()
     serializer_class = RelationSerializer
     permission_classes = (ReadOnlyPermission,)
 
 
-class GeonamesViewSet(viewsets.ModelViewSet):
+class GeonamesViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                      viewsets.GenericViewSet):
     queryset = Geonames.objects.all()
     serializer_class = GeonameSerializer
     permission_classes = (ReadOnlyPermission,)
 
 
-class FeatureCodeViewSet(viewsets.ModelViewSet):
+class FeatureCodeViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                         viewsets.GenericViewSet):
     queryset = FeatureCode.objects.all()
     serializer_class = FeatureCodeSerializer
     permission_classes = (ReadOnlyPermission,)
@@ -346,3 +350,33 @@ class CountryImportedView(mixins.ListModelMixin, mixins.RetrieveModelMixin,
     queryset = CountryImported.objects.all()
     serializer_class = CountryImportedSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+
+class CorrespondenceTypesInvalidView(viewsets.ModelViewSet):
+    def create(self, request, **kwargs):
+        request.data['process_id'] = random.randint(1, 100)
+        serializer = ScheduledWorkSerializer(data=request.data)
+
+        if request.data.get('name', '') == SCHEDULED_WORK_IMPORTATION_PROCESS and not request.data.get('country_name'):
+            raise Exception("Country name parameter required")
+
+        if request.data.get('name', '') == SCHEDULED_WORK_IMPORTATION_PROCESS:
+            count = CountryImported.objects.filter(country_name=request.data.get('country_name', '').upper()).count()
+            if count > 0:
+                raise Exception("The country had already imported")
+            else:
+                country_imported = CountryImported(country_name=request.data.get('country_name'))
+                country_imported.save()
+
+        if serializer.is_valid():
+            serializer.save()
+
+            thread = BackgroundProcess(thread_id=request.data.get('process_id'), name=request.data.get('name'),
+                                       process=request.data.get('name'),
+                                       positional_params=request.data.get('file_name'),
+                                       others_params='skip_geonames')
+            thread.start()
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -282,6 +282,21 @@ class CorrespondenceTypesClose(models.Model):
     date_validation = models.DateTimeField(blank=False, default=timezone.now)
 
 
+class CorrespondenceTypesInvalid(models.Model):
+    id = models.AutoField(primary_key=True)
+    gn_feature_class = models.CharField(max_length=1)
+    gn_feature_code = models.CharField(max_length=10)
+
+    osm_key = models.CharField(max_length=50)
+    osm_value = models.CharField(max_length=300)
+    date_validation = models.DateTimeField(blank=False, default=timezone.now)
+    quantity = models.IntegerField(default=0)
+    active = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('gn_feature_class', 'gn_feature_code', 'osm_key', 'osm_value')
+
+
 class ScheduledWork(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)

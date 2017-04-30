@@ -200,6 +200,7 @@ def osm_importation(self, file, scheduled_work):
 
             elif event == 'end' and elem.tag == 'node':
                 nodes_importation(elem, path)
+                path.clear()
                 count += 1
 
             elif event == 'end' and elem.tag == 'way':
@@ -224,6 +225,7 @@ def osm_importation(self, file, scheduled_work):
                     flag_ways = True
 
                 relation_importation(elem, path)
+                path.clear()
                 count += 1
         except Exception as detail:
             self.stdout.write(
@@ -303,7 +305,7 @@ def ways_importation(xml_way, xml_way_childs):
                                                 len(xml_way.findall('nd'))))
 
     xml_way.clear()
-    xml_way_child.clear()
+    xml_way_childs.clear()
 
 
 def relation_importation(xml_relation, xml_childs):
@@ -345,7 +347,7 @@ def relation_importation(xml_relation, xml_childs):
     print("%s INFO: %d members imported." % (datetime.now(), count_member))
 
     xml_relation.clear()
-    xml_child.clear()
+    xml_childs.clear()
 
 
 def clean_entities_without_name(self):

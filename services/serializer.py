@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Node, Tag, Way, Relation, Parameters, CorrespondenceEntity, CorrespondenceValide, Geonames, \
-    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, ScheduledWork, CountryImported
+    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, \
+    ScheduledWork, CountryImported, CorrespondenceTypesInvalid
 
 
 class TagSerializer(serializers.HyperlinkedModelSerializer):
@@ -104,3 +105,9 @@ class CountryImportedSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = CountryImported
         fields = ('country_name', 'date')
+
+
+class CorrespondenceTypesInvalidSerializer (serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = CorrespondenceTypesInvalid
+        fields = ('id', 'gn_feature_class', 'gn_feature_code', 'osm_key', 'osm_value', 'quantity', 'active')
