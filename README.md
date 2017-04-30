@@ -51,3 +51,13 @@ DELETE FROM services_geoname
 WHERE correspondence_check = 0
     
     var1 varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL
+    
+    
+
+ALTER TABLE TER.services_tag MODIFY COLUMN value VARCHAR(300)
+    CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
+
+ALTER TABLE
+    TER.services_tag
+    CONVERT TO CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
