@@ -1,7 +1,8 @@
 import json
 import requests
 
-from services.models import Parameters, CorrespondenceTypes, CorrespondenceTypesClose, FeatureCode
+from services.models import Parameters, CorrespondenceTypes, CorrespondenceTypesClose, FeatureCode, \
+    CorrespondenceTypesInvalid
 from util.string_matching import distance_levenshtein
 from util.util import get_name_shape, remove_tag_name, print_tags
 
@@ -21,7 +22,7 @@ def align_algorithme(entity_gn, list_block_osm_entities):
         matching_name_level = match_name_string(entity_gn, entity_osm.get('name'))
 
         type_tag_osm, matching_type_level = match_type_correspondence(entity_gn, entity_osm.get('tag_list'))
-        if not matching_type_level:
+        if not type_tag_osm:
             type_tag_osm, matching_type_level = match_type_synonyms(entity_gn, entity_osm.get('tag_list'))
 
         """
@@ -67,30 +68,37 @@ def match_type_correspondence(entity_gn, tag_list):
     :return:
     """
     match_level = 0
-    tag_match = ''
+    tag_match = False
 
     similarity_type_for_total_match = float(Parameters.objects.get(name="similarity_type_for_total_match").value)
     similarity_type_for_users_validation = float(Parameters.objects.get(name="similarity_type_for_users_validation")
                                                  .value)
 
     tag_list = remove_tag_name(tag_list)
-
     for tag in tag_list:
         match = CorrespondenceTypes.objects.filter(gn_feature_code=entity_gn.get_feature_code(),
                                                    gn_feature_class=entity_gn.get_feature_class(),
                                                    osm_key=tag.key,
-                                                   osm_value=tag.value)
+                                                   osm_value=tag.value).count()
 
-        if match:
+        if match > 0:
             return tag, similarity_type_for_total_match
 
         match_close = CorrespondenceTypesClose.objects.filter(gn_feature_code=entity_gn.get_feature_code(),
                                                               gn_feature_class=entity_gn.get_feature_class(),
                                                               osm_key=tag.key,
-                                                              osm_value=tag.value)
+                                                              osm_value=tag.value).count()
 
-        if match_close and max(similarity_type_for_users_validation, match_level) != match_level:
+        if match_close > 0 and max(similarity_type_for_users_validation, match_level) != match_level:
             (tag_match, match_level) = (tag, max(similarity_type_for_users_validation, match_level))
+
+        match_invalid = CorrespondenceTypesInvalid.objects.filter(gn_feature_code=entity_gn.get_feature_code(),
+                                                                  gn_feature_class=entity_gn.get_feature_class(),
+                                                                  osm_key=tag.key,
+                                                                  osm_value=tag.value, active=True).count()
+
+        if match_invalid > 0 and match_level == 0:
+            (tag_match, match_level) = (tag, 0)
 
     return tag_match, match_level
 

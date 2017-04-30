@@ -32,7 +32,6 @@ class Command(BaseCommand):
             list_block_entities = blocking_function(entity)
             list_align_entities = align_algorithme(entity, list_block_entities)
             for entity in list_align_entities:
-
                 (latitude_osm, longitude_osm) = entity['coordinates_osm']
 
                 gn_name_type = \
@@ -43,11 +42,11 @@ class Command(BaseCommand):
                 coordinates_matching = matching_coordinates(position_gn, position_osm)
 
                 weight_param, pertinence_score = get_pertinence_score(match_name=entity['name_matching'],
-                                                                       match_geographical_coordinates=
-                                                                       coordinates_matching,
-                                                                       match_type=entity['type_matching'],
-                                                                       gn_feature_code=gn_entity.fcode,
-                                                                       gn_feature_class=gn_entity.fclass)
+                                                                      match_geographical_coordinates=
+                                                                      coordinates_matching,
+                                                                      match_type=entity['type_matching'],
+                                                                      gn_feature_code=gn_entity.fcode,
+                                                                      gn_feature_class=gn_entity.fclass)
 
                 correspondence = CorrespondenceEntity(reference_gn=gn_entity.id, reference_osm=entity['entity_osm'].id,
                                                       gn_name=gn_entity.name,

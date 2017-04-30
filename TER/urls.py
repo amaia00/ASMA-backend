@@ -36,6 +36,7 @@ router.register(r'entity-osm-details/(?P<id>.+)/$', views.EntityOSMDetails, base
 router.register(r'correspondence', views.CorrespondenceEntityView, base_name='correspondence')
 router.register(r'correspondence-types', views.CorrespondenceTypesViewSet)
 router.register(r'correspondence-types-close', views.CorrespondenceTypesCloseViewSet)
+router.register(r'correspondence-invalid-type', views.CorrespondenceTypesInvalidViewSet)
 router.register(r'correspondence-valide', views.CorrespondenceValideView, base_name='correspondence-valide')
 router.register(r'correspondence-invalide', views.CorrespondenceInvalideView,  base_name='correspondence-invalide')
 router.register(r'scheduled-work', views.ScheduledWorkViewSet)

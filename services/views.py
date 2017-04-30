@@ -1,16 +1,17 @@
 from rest_framework import viewsets, permissions, views, status, parsers, mixins
 from rest_framework.response import Response
 from rest_framework.request import Request
+from django.db.models import F
 from django.conf import settings
 from .permissions import ReadOnlyPermission
 from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geonames, \
     FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, \
-    ScheduledWork, VALIDE, INVALIDE, SCHEDULED_WORK_IMPORTATION_PROCESS, CountryImported
+    ScheduledWork, VALIDE, INVALIDE, SCHEDULED_WORK_IMPORTATION_PROCESS, CountryImported, CorrespondenceTypesInvalid
 from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationSerializer, \
     CorrespondenceValideSerializer, CorrespondenceEntitySerializer, ParameterSerializer, GeonameSerializer, \
     FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
     CorrespondenceInvalideSerializer, ParametersScorePertinenceSerializer, ScheduledWorkSerializer, \
-    CountryImportedSerializer
+    CountryImportedSerializer, CorrespondenceTypesInvalidSerializer
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from services.classes.thread import BackgroundProcess
 import random
@@ -299,8 +300,6 @@ class CorrespondenceInvalideView(viewsets.ViewSet):
 
 
 class CorrespondenceTypesViewSet(viewsets.ModelViewSet):
-    # TODO: Help pour visualizer... blablabla
-
     queryset = CorrespondenceTypes.objects.all()
     serializer_class = CorrespondenceTypesSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
@@ -352,31 +351,51 @@ class CountryImportedView(mixins.ListModelMixin, mixins.RetrieveModelMixin,
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
-class CorrespondenceTypesInvalidView(viewsets.ModelViewSet):
+class CorrespondenceTypesInvalidViewSet(mixins.CreateModelMixin,
+                                        mixins.RetrieveModelMixin,
+                                        mixins.ListModelMixin,
+                                        viewsets.GenericViewSet):
+    queryset = CorrespondenceTypesInvalid.objects.all()
+    serializer_class = CorrespondenceTypesInvalidSerializer
+
     def create(self, request, **kwargs):
-        request.data['process_id'] = random.randint(1, 100)
-        serializer = ScheduledWorkSerializer(data=request.data)
 
-        if request.data.get('name', '') == SCHEDULED_WORK_IMPORTATION_PROCESS and not request.data.get('country_name'):
-            raise Exception("Country name parameter required")
+        gn_feature_class = request.data.get('gn_feature_class')
+        gn_feature_code = request.data.get('gn_feature_code')
 
-        if request.data.get('name', '') == SCHEDULED_WORK_IMPORTATION_PROCESS:
-            count = CountryImported.objects.filter(country_name=request.data.get('country_name', '').upper()).count()
-            if count > 0:
-                raise Exception("The country had already imported")
+        osm_key = request.data.get('osm_key')
+        osm_value = request.data.get('osm_value')
+
+        try:
+            type_correspondence = CorrespondenceTypesInvalid.objects.only('id', 'quantity').get(gn_feature_code=
+                                                                                                gn_feature_code,
+                                                                                                gn_feature_class=
+                                                                                                gn_feature_class,
+                                                                                                osm_key=osm_key,
+                                                                                                osm_value=osm_value)
+        except CorrespondenceTypesInvalid.DoesNotExist:
+            type_correspondence = None
+
+        if not type_correspondence:
+            serializer = CorrespondenceTypesInvalidSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
-                country_imported = CountryImported(country_name=request.data.get('country_name'))
-                country_imported.save()
-
-        if serializer.is_valid():
-            serializer.save()
-
-            thread = BackgroundProcess(thread_id=request.data.get('process_id'), name=request.data.get('name'),
-                                       process=request.data.get('name'),
-                                       positional_params=request.data.get('file_name'),
-                                       others_params='skip_geonames')
-            thread.start()
-
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            print("PUT")
+            request.data['id'] = type_correspondence.id
+            request.data['quantity'] = type_correspondence.quantity + 1
+
+            minimum_invalid_type_required = int(Parameters.objects.only('value')
+                                                .get(name='minimum_invalid_type_required').value)
+            if type_correspondence.quantity >= minimum_invalid_type_required:
+                request.data['active'] = True
+            else:
+                request.data['active'] = False
+
+            CorrespondenceTypesInvalid.objects.filter(pk=type_correspondence.id) \
+                .update(quantity=request.data['quantity'], active=request.data['active'])
+
+            return Response(request.data, status=status.HTTP_200_OK)
