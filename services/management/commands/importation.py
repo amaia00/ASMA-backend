@@ -97,7 +97,7 @@ class Command(BaseCommand):
                 self.style.MIGRATE_LABEL("GeoNames Importation"))
 
             file = options['file2'] or file[0]
-            geonames_importation(self, file, scheduled_work)
+            geonames_importation(self, file)
 
             if not options['skip-features']:
                 file = options['file3']

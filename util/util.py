@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 
 def has_name(tag):
     """
@@ -32,3 +34,26 @@ def remove_tag_name(tags):
 def print_tags(tags):
     for tag in tags:
         print(tag.key + ': ' + tag.value)
+
+
+def split_array(sequence, precision=Decimal(0.1)):
+    """
+    
+    :param sequence: 
+    :param precision
+    :return: 
+    """
+    digit = digits(precision)
+    precision = float(precision)
+    result = []
+    for s in sequence:
+        # We made a round for the limitations of float
+        if not result or s != round(result[-1][-1] + precision, digit):
+            result.append([])
+        result[-1].append(s)
+
+    return result
+
+
+def digits(n):
+    return max(0,-n.as_tuple().exponent)

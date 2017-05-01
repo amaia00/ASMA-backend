@@ -1,17 +1,10 @@
-from rest_framework import viewsets, permissions, views, status, parsers, mixins
+from rest_framework import viewsets, permissions, status, mixins
 from rest_framework.response import Response
 from rest_framework.request import Request
-from django.db.models import F
 from django.conf import settings
 from .permissions import ReadOnlyPermission
-from .models import Tag, Node, Way, Relation, Parameters, CorrespondenceValide, CorrespondenceEntity, Geonames, \
-    FeatureCode, CorrespondenceTypes, CorrespondenceTypesClose, CorrespondenceInvalide, ParametersScorePertinence, \
-    ScheduledWork, VALIDE, INVALIDE, SCHEDULED_WORK_IMPORTATION_PROCESS, CountryImported, CorrespondenceTypesInvalid
-from .serializer import TagSerializer, PointSerializer, WaySerializer, RelationSerializer, \
-    CorrespondenceValideSerializer, CorrespondenceEntitySerializer, ParameterSerializer, GeonameSerializer, \
-    FeatureCodeSerializer, CorrespondenceTypesSerializer, CorrespondenceTypesCloseSerializer, \
-    CorrespondenceInvalideSerializer, ParametersScorePertinenceSerializer, ScheduledWorkSerializer, \
-    CountryImportedSerializer, CorrespondenceTypesInvalidSerializer
+from .models import *
+from .serializer import *
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from services.classes.thread import BackgroundProcess
 import random

@@ -61,3 +61,26 @@ ALTER TABLE
     TER.services_tag
     CONVERT TO CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
+
+
+
+
+DELETE FROM services_tag;
+DELETE FROM services_node;
+DELETE FROM services_way;
+DELETE FROM services_relation;
+
+
+TRUNCATE TABLE services_geonames;
+
+
+
+TRUNCATE TABLE services_correspondenceentity;
+
+TRUNCATE TABLE services_correspondencevalide;
+
+TRUNCATE TABLE services_correspondenceinvalide;
+
+
+
+

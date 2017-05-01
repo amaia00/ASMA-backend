@@ -29,9 +29,9 @@ def matching_coordinates(point_reference, point_in_search_ratio):
     point1 = GeoLocation.from_degrees(point_reference.get_latitude(), point_reference.get_longitude())
     point2 = GeoLocation.from_degrees(float(point_in_search_ratio.get_latitude()), float(point_in_search_ratio.get_longitude()))
 
-    search_ratio = Parameters.objects.get(name='search_radius_for_blocking').value
+    search_ratio = float(Parameters.objects.get(name='search_radius_for_blocking').value)
     distance = point1.distance_to(point2)
-    matching = 1 - (distance / float(search_ratio))
+    matching = 1 - (distance / search_ratio)
 
     return round(matching, 3)
 

@@ -12,7 +12,7 @@ def blocking_function(entite):
     :return:
     """
     list_match_entities = []
-    param_distance_ratio = float(Parameters.objects.get(name='distance_ratio').value)
+    param_distance_ratio = float(Parameters.objects.get(name='search_radius_for_blocking').value)
     list_entities_in_ratio = get_object_in_ratio(entite, param_distance_ratio)
 
     for entity_in_ratio in list_entities_in_ratio:
