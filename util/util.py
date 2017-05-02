@@ -1,5 +1,5 @@
 from decimal import Decimal
-
+import numpy as np
 
 def has_name(tag):
     """
@@ -57,3 +57,4 @@ def split_array(sequence, precision=Decimal(0.1)):
 
 def digits(n):
     return max(0,-n.as_tuple().exponent)
+

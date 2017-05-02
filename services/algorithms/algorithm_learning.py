@@ -1,118 +1,134 @@
 from decimal import Decimal
-from sklearn.tree import tree
 
+from sklearn.tree import tree
 from services.algorithms.pertinence_score import get_pertinence_score_with_weight
 from services.models import Parameters, CorrespondenceEntity, ParametersScorePertinence
 import numpy as np
-from util.util import split_array
 
 DEBUG = False
 
 
-def generate_numpy_array_with_training_set():
-    training_set_size = int(Parameters.objects.only('value').get(name='training_set_size').value)
-    set_values = CorrespondenceEntity.objects.only('similarity_name', 'similarity_type', 'similarity_coordinates',
-                                                   'validation').exclude(validation=0).order_by('?')[
-                 :training_set_size].all()
+class LearningAlgorithm:
+    def __init__(self):
+        self.precision = Decimal(Parameters.objects.only('value')
+                                 .get(name='precision_of_calculation_of_range_decision_three').value)
+        self.iteration = 0
+        self.training_set = None
+        self.test_set = []
 
-    list_array = list()
-    for correspondence in set_values:
-        if int(correspondence.validation) == 1:
-            validation = float(1)
-        else:
-            validation = float(0)
+        self.training_set_size = int(Parameters.objects.only('value').get(name='training_set_size_with_test').value)
+        self.test_set_size = float(Parameters.objects.only('value').get(name='test_set_percentage').value)
 
-        list_array.append([float(correspondence.similarity_name), float(correspondence.similarity_type),
-                           float(correspondence.similarity_coordinates), validation])
+        set_values = CorrespondenceEntity.objects.only('similarity_name', 'similarity_type', 'similarity_coordinates',
+                                                       'validation').exclude(validation=0).order_by('?')[
+                     :self.training_set_size].all()
 
-    result_array = np.array([row for row in list_array])
-    return result_array
+        self.training_set_size = len(set_values)
+        self.test_set_size = int(self.test_set_size * self.training_set_size)
 
+        list_array = list()
+        for correspondence in set_values:
+            if int(correspondence.validation) == 1:
+                validation = float(1)
+            else:
+                validation = float(0)
 
-def get_test_set():
-    test_set = int(Parameters.objects.only('value').get(name='test_set_size').value)
-    set_values = CorrespondenceEntity.objects.only('similarity_name', 'similarity_type', 'similarity_coordinates',
-                                                   'validation').exclude(validation=0).order_by('?')[:test_set].all()
-    return set_values
+            list_array.append([float(correspondence.similarity_name), float(correspondence.similarity_type),
+                               float(correspondence.similarity_coordinates), validation])
 
-
-def get_similarity_attribute_reason(test_set, attribute, range_minimum, range_maximum):
-    qte_total = len(test_set)
-    qte_match_in_range = 0
-    for test in test_set:
-        if test.validation == 1 and range_minimum <= float(getattr(test, attribute)) <= range_maximum:
-            qte_match_in_range += 1
-
-    return qte_match_in_range / qte_total
-
-
-def get_range_values(features, target, attribute=''):
-    similarity_attribute = tree.DecisionTreeClassifier(random_state=0)
-    similarity_attribute = similarity_attribute.fit(features, target)
-    precision = Decimal(Parameters.objects.only('value').get(name='precision_of_calculation_of_range_decision_three')
-                      .value)
-
-    float_values = np.arange(0, 1 + precision, precision)
-    range_attribute = []
-    for i in float_values:
-        another = i
-        t = similarity_attribute.predict([[i]])[0]
-
-        if t == float(1):
-            range_attribute.append(float(str(another)))
+        result_array = np.array([row for row in list_array], dtype='f')
+        self.division = int(self.training_set_size / self.test_set_size)
+        self.results = np.vsplit(result_array, self.division)
+        self.universe = result_array
 
         if DEBUG:
-            print("For similarity {0} {1} classification gives {2}".format(attribute, i, t))
+            print("universe", self.universe)
 
-    ranges_attribute = split_array(range_attribute, precision)
+    def generate_numpy_array_with_training_and_test_set(self):
+        self.test_set = self.results[self.iteration]
+        self.training_set = None
 
-    if DEBUG:
-        print("All ranges {0}".format(attribute), ranges_attribute)
+        for i in range(0, self.division):
+            if i != self.iteration:
+                if self.training_set is not None:
+                    self.training_set = np.vstack([self.training_set, self.results[i]])
+                else:
+                    self.training_set = self.results[i]
 
-    max_elements = 0
-    max_range_attribute = []
-    for range in ranges_attribute:
-        if len(range) >= max_elements:
-            max_range_attribute = range
-            max_elements = len(range)
+        self.iteration += 1
 
-    if not max_range_attribute:
-        return 0, 0
+        if DEBUG:
+            print("iteration", self.iteration)
+            print("trainning set", self.training_set)
+            print("test set", self.test_set)
 
-    if DEBUG:
-        print("Range {0}:".format(attribute), max_range_attribute[0], "-", max_range_attribute[-1])
+        return self.training_set, self.test_set
 
-    return max_range_attribute[0], max_range_attribute[-1]
+    def get_similarity_attribute_reason(self, features, target, attribute=''):
+        similarity_attribute = tree.DecisionTreeClassifier()
+        similarity_attribute = similarity_attribute.fit(features, target)
 
+        float_values = np.arange(0, 1 + self.precision, self.precision)
+        match_times = 0
+        total = 0
+        for i in float_values:
+            t = similarity_attribute.predict([[i]])[0]
 
-def save_new_weights(weight_name, weight_type, weight_coordinates):
-    ParametersScorePertinence.objects.filter(name='weight_matching_global', all_types=1, active=True) \
-        .update(active=False)
-    params = ParametersScorePertinence(name='weight_matching_global', all_types=1, active=True, weight_name=weight_name,
-                                       weight_type=weight_type, weight_coordinates=weight_coordinates)
-    params.save()
+            total += 1
+            if t == float(1):
+                match_times += 1
 
-    return params.id
+            if DEBUG:
+                print("For similarity {0} {1} classification gives {2}".format(attribute, i, t))
 
+        return match_times / total
 
-def recalculate_pertinence_score(weights_id):
-    correspondences = CorrespondenceEntity.objects.only('id').all()
-    count = len(correspondences)
-    for correspondence_id in correspondences:
-        row = CorrespondenceEntity.objects.get(pk=correspondence_id.id)
-        _, pertinence_score = get_pertinence_score_with_weight(gn_feature_code=row.gn_feature_code,
-                                                               gn_feature_class=row.gn_feature_class,
-                                                               match_name=row.similarity_name,
-                                                               match_type=row.similarity_type,
-                                                               match_geographical_coordinates=row.similarity_coordinates,
-                                                               weight_id=weights_id)
-        row.pertinence_score = pertinence_score
-        row.weight_params_id = weights_id
-        row.save()
+    def validate_attribute_importance(self, features, target, importance, attribute=''):
+        reason_test = self.get_similarity_attribute_reason(features, target, attribute)
+        error_rate = abs(reason_test - importance)
+        return error_rate
 
-    return count
+    @staticmethod
+    def save_new_weights(weight_name, weight_type, weight_coordinates):
+        ParametersScorePertinence.objects.filter(name='weight_matching_global', all_types=1, active=True) \
+            .update(active=False)
+        params = ParametersScorePertinence(name='weight_matching_global', all_types=1, active=True,
+                                           weight_name=weight_name,
+                                           weight_type=weight_type, weight_coordinates=weight_coordinates)
+        params.save()
 
+        return params.id
 
-def normalize_values(weight_name, weight_type, weight_coordinates):
-    total = weight_name + weight_type + weight_coordinates
-    return weight_name/total, weight_type/total, weight_coordinates/total
+    @staticmethod
+    def recalculate_pertinence_score(weights_id):
+        correspondences = CorrespondenceEntity.objects.only('id').all()
+        count = len(correspondences)
+        for correspondence_id in correspondences:
+            row = CorrespondenceEntity.objects.get(pk=correspondence_id.id)
+            _, pertinence_score = get_pertinence_score_with_weight(gn_feature_code=row.gn_feature_code,
+                                                                   gn_feature_class=row.gn_feature_class,
+                                                                   match_name=row.similarity_name,
+                                                                   match_type=row.similarity_type,
+                                                                   match_geographical_coordinates=
+                                                                   row.similarity_coordinates,
+                                                                   weight_id=weights_id)
+            row.pertinence_score = pertinence_score
+            row.weight_params_id = weights_id
+            row.save()
+
+        return count
+
+    @staticmethod
+    def normalize_values(array):
+        total = sum(array)
+        return array[0] / total, array[1] / total, array[2] / total
+
+    @staticmethod
+    def soft_max(array):
+        """
+        Compute softmax values for each sets of scores in x.
+        
+        Rows are scores for each class. 
+        Columns are predictions (samples).
+        """
+        return np.exp(array) / np.sum(np.exp(array), axis=0)
