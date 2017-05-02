@@ -367,9 +367,9 @@ def clean_entities_without_name(self):
 
     while not rows == 0:
         cursor.execute(
-            "SELECT n.id  FROM services_node n WHERE n.relation_reference_id IS NULL and " +
-            "n.way_reference_id IS NULL AND NOT EXISTS(SELECT t.id FROM services_tag t WHERE " +
-            "t.reference = n.id AND t.`key` IN ('name','name:en') LIMIT 1000;")
+            "SELECT n.id  FROM services_node n WHERE n.relation_reference_id IS NULL AND " +
+            "n.way_reference_id IS NULL AND NOT EXISTS (SELECT t.id FROM services_tag t WHERE " +
+            "t.reference = n.id AND t.key IN ('name','name:en')) LIMIT 1000")
 
         fathers_nodes = cursor.fetchall()
         rows = 0
@@ -389,8 +389,8 @@ def clean_entities_without_name(self):
     while not rows == 0:
         cursor.execute(
             "SELECT w.id FROM services_way w WHERE w.relation_reference_id IS NULL AND NOT "
-            "EXISTS SELECT t.id FROM services_tag t WHERE t.reference = w.id AND t.`key` "
-            "IN ('name', 'name:en')) LIMIT 1000;")
+            "EXISTS (SELECT t.id FROM services_tag t WHERE t.reference = w.id AND t.key "
+            "IN ('name', 'name:en')) LIMIT 1000")
 
         fathers_ways = cursor.fetchall()
         rows = 0
@@ -412,8 +412,8 @@ def clean_entities_without_name(self):
     while not rows == 0:
         cursor.execute(
             "SELECT r.id FROM services_relation r WHERE r.relation_reference_id IS NULL AND "
-            "NOT EXISTS(SELECT t.id FROM services_tag t WHERE t.reference = r.id AND t.`key` "
-            "IN ('name', 'name:en')) LIMIT 1000;")
+            "NOT EXISTS (SELECT t.id FROM services_tag t WHERE t.reference = r.id AND t.key "
+            "IN ('name', 'name:en')) LIMIT 1000")
 
         fathers_relations = cursor.fetchall()
         rows = 0
