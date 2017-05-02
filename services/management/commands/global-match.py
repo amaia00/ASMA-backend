@@ -17,10 +17,12 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.MIGRATE_LABEL('%s : The process begins.' %
                                      (datetime.now())))
+        scheduled_work = {}
+
         try:
             # TODO correspondence_check=False
             geoname_entities = Geonames.objects.only('id').filter(correspondence_check=False).values()
-            total_rows = geoname_entities.count()
+            total_rows = len(geoname_entities)
 
             '''
             On garde le processus dans la table avec l'état PENDING
@@ -42,7 +44,7 @@ class Command(BaseCommand):
                     scheduled_work.error_rows += 1
                     scheduled_work.save()
                     raise CommandError('%s :Error: %s.Entity id %s' %
-                                                 (datetime.now(), error, geoname_entity['id']))
+                                       (datetime.now(), error, geoname_entity['id']))
 
             if scheduled_work.error_rows == scheduled_work.affected_rows:
                 scheduled_work.status = ERROR
@@ -60,4 +62,8 @@ class Command(BaseCommand):
                                                                        scheduled_work.error_rows,
                                                                        scheduled_work.total_rows))
         except Exception as error:
+            scheduled_work.status = ERROR
+            scheduled_work.final_date = timezone.now()
+            scheduled_work.save()
+
             raise CommandError(error)

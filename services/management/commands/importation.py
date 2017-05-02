@@ -375,7 +375,7 @@ def clean_entities_without_name(self):
         rows = 0
         for node_id in fathers_nodes:
             rows += 1
-            Tag.objects.filter(referenc=node_id).delete()
+            Tag.objects.filter(reference=node_id).delete()
             Node.objects.filter(pk=node_id).delete()
             count += 1
 

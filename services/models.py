@@ -61,6 +61,11 @@ class Tag(models.Model):
     value = models.CharField(max_length=300)
 
 
+class TagForClean(models.Model):
+    id = models.IntegerField(primary_key=True)
+    reference = models.BigIntegerField(db_index=True)
+
+
 class Node(models.Model):
     id = models.BigIntegerField(unique=True, primary_key=True)
 
