@@ -190,13 +190,18 @@ def osm_importation(self, file, scheduled_work):
     :return: 
     """
     path = []
-    flag_nodes = False
-    flag_ways = False
+    flag = False
     count = 0
     for event, elem in ET.iterparse(file, events=("start", "end")):
         try:
-            if event == 'start' and elem.tag == 'relation':
-                path.append(elem)
+            if not flag and event == 'start' and elem.tag == 'relation':
+                flag = True
+                self.stdout.write(
+                             self.style.MIGRATE_HEADING("%s INFO: relations begin." % datetime.now()))
+
+            if flag:
+                if event == 'start':
+                    path.append(elem)
 
             # elif event == 'end' and elem.tag == 'node':
             #     nodes_importation(elem, path)
@@ -215,18 +220,13 @@ def osm_importation(self, file, scheduled_work):
             #     ways_importation(elem, path)
             #     count += 1
 
-            elif event == 'end' and elem.tag == 'relation':
-                if not flag_ways:
-                    self.stdout.write(
-                        self.style.MIGRATE_HEADING("%s INFO: %d ways imported." % (datetime.now(), count)))
-                    scheduled_work.affected_rows += count
-                    scheduled_work.save()
-                    count = 0
-                    flag_ways = True
+                elif event == 'end' and elem.tag == 'relation':
+                    relation_importation(elem, path)
+                    path.clear()
+                    count += 1
+            else:
+                elem.clear()
 
-                relation_importation(elem, path)
-                path.clear()
-                count += 1
         except Exception as detail:
             self.stdout.write(
                 self.style.ERROR(("%s ERROR: " % datetime.now()) + str(detail)))

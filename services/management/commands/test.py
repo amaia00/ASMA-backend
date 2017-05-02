@@ -2,7 +2,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from services.classes.classes import PositionGPS
 from util.coordinates_matching import matching_coordinates
-from services.models import Geonames, Tag, ParametersScorePertinence
+from services.models import Geonames, Tag, ParametersScorePertinence, Node
 from services.classes.classes import EntityGeoNames
 from services.algorithms.algorithm_align import match_type_correspondence, match_type_synonyms
 from services.algorithms.algorithm_blocking import blocking_function
@@ -23,6 +23,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         print("hello world")
+        fathers_nodes = Node.objects.only('id').filter(relation_reference__isnull=True, way_reference__isnull=True,
+                                                       checked_name=False)[:1000]
+        for node in fathers_nodes:
+            id = node.id
+            print(node.id)
+            break
+
+        tag_list = Tag.objects.only('key', 'value').filter(reference=389577997).exclude(key__contains='name')
+        for tag in tag_list:
+            print(tag.key, tag.value)
+
+
         # array = generate_numpy_array_with_trainning_set()
         # print(array.data)
         # print(array)

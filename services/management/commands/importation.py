@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
 from django.core.management.base import BaseCommand, CommandError
-from services.models import Relation, Tag, Node, Way, Geonames, FeatureCode, RELATION, NODE, WAY, ScheduledWork, SCHEDULED_WORK_IMPORTATION_PROCESS, PENDING, ERROR, FINALIZED, INPROGRESS
+from services.models import Relation, Tag, Node, Way, Geonames, FeatureCode, RELATION, NODE, WAY, ScheduledWork, \
+    SCHEDULED_WORK_IMPORTATION_PROCESS, PENDING, ERROR, FINALIZED, INPROGRESS
 import xml.etree.ElementTree as ET
 from util.util import get_name_shape
 from datetime import datetime
 from django.utils import timezone
+from django.db import connection
 
 
 class Command(BaseCommand):
@@ -83,7 +85,6 @@ class Command(BaseCommand):
         # try:
 
         if not options['skip-osm']:
-
             self.stdout.write(
                 self.style.MIGRATE_LABEL("OSM Importation"))
 
@@ -352,68 +353,81 @@ def relation_importation(xml_relation, xml_childs):
 
 def clean_entities_without_name(self):
     """
-    
+
     :param self: 
     :return: 
     """
-    count = 0
-    fathers_nodes = Node.objects.filter(relation_reference__isnull=True, way_reference__isnull=True, checked_name=False)
-    for node in fathers_nodes:
-        tag_list = Tag.objects.filter(reference=node.id)
-        name, _ = get_name_shape(tag_list)
-        if not name:
-            node.delete()
-            count += 1
-    fathers_nodes.update(checked_name=True)
 
-    print("%s INFO: %d nodes deleted." % (datetime.now(), count))
+    self.stdout.write(
+        self.style.MIGRATE_HEADING("%s INFO: Cleaning OSM Entities" % datetime.now()))
 
     count = 0
-    count_nodes = 0
-    fathers_ways = Way.objects.filter(relation_reference_id__isnull=True, checked_name=False)
-    for way in fathers_ways:
-        tag_list = Tag.objects.filter(reference=way.id)
-        name, _ = get_name_shape(tag_list)
-        if not name:
-            way.delete()
-            count_nodes += Node.objects.filter(way_reference=way.id).count()
-            Node.objects.filter(way_reference=way.id).delete()
+    rows = 1
+    cursor = connection.cursor()
+
+    while not rows == 0:
+        cursor.execute(
+            "SELECT n.id  FROM services_node n WHERE n.relation_reference_id IS NULL and " +
+            "n.way_reference_id IS NULL AND NOT EXISTS(SELECT t.id FROM services_tag t WHERE " +
+            "t.reference = n.id AND t.`key` IN ('name','name:en') LIMIT 1000;")
+
+        fathers_nodes = cursor.fetchall()
+        rows = 0
+        for node_id in fathers_nodes:
+            rows += 1
+            Tag.objects.filter(referenc=node_id).delete()
+            Node.objects.filter(pk=node_id).delete()
+            count += 1
+
+        if rows < 1000:
+            rows = 0
+
+        print("%s INFO: %d nodes deleted. Affected %d" % (datetime.now(), count, rows))
+
+    count = 0
+    rows = 1
+    while not rows == 0:
+        cursor.execute(
+            "SELECT w.id FROM services_way w WHERE w.relation_reference_id IS NULL AND NOT "
+            "EXISTS SELECT t.id FROM services_tag t WHERE t.reference = w.id AND t.`key` "
+            "IN ('name', 'name:en')) LIMIT 1000;")
+
+        fathers_ways = cursor.fetchall()
+        rows = 0
+        for way_id in fathers_ways:
+            rows += 1
+            Tag.objects.filter(reference=way_id).delete()
+            Node.objects.filter(way_reference=way_id).delete()
+            Way.objects.filter(pk=way_id).delete()
 
             count += 1
 
-    fathers_ways.update(checked_name=True)
+        if rows < 1000:
+            rows = 0
+
     print("%s INFO: %d ways deleted." % (datetime.now(), count))
-    print("%s INFO: %d nodes linked to this ways deleted." % (datetime.now(), count_nodes))
 
     count = 0
-    count_nodes = 0
-    count_ways = 0
+    rows = 1
+    while not rows == 0:
+        cursor.execute(
+            "SELECT r.id FROM services_relation r WHERE r.relation_reference_id IS NULL AND "
+            "NOT EXISTS(SELECT t.id FROM services_tag t WHERE t.reference = r.id AND t.`key` "
+            "IN ('name', 'name:en')) LIMIT 1000;")
 
-    fathers_relations = Relation.objects.filter(relation_reference__isnull=True, checked_name=False)
-    for relation in fathers_relations:
-        tag_list = Tag.objects.filter(reference=relation.id)
-        name, _ = get_name_shape(tag_list)
+        fathers_relations = cursor.fetchall()
+        rows = 0
+        for relation_id in fathers_relations:
+            rows += 1
+            Tag.objects.filter(reference=relation_id).delete()
+            Node.objects.filter(relation_reference=relation_id).delete()
+            Way.objects.filter(relation_reference=relation_id).delete()
+            Relation.objects.filter(pk=relation_id).delete()
 
-        if not name:
-            count_nodes += Node.objects.filter(relation_reference=relation.id).count()
-            Node.objects.filter(relation_reference=relation.id).delete()
-
-            ways = Way.objects.filter(relation_reference=relation.id)
-            count_ways += ways.count()
-            Way.objects.filter(relation_reference=relation.id).delete()
-
-            for way in ways:
-                count_nodes += Node.objects.filter(way_reference=way.id).count()
-                Node.objects.filter(way_reference=way.id).delete()
-
-            relation.delete()
-            count += 1
-
-    fathers_relations.update(checked_name=True)
+        if rows < 1000:
+            rows = 0
 
     print("%s INFO: %d relation deleted." % (datetime.now(), count))
-    print("%s INFO: %d ways linked to this relations deleted." % (datetime.now(), count_ways))
-    print("%s INFO: %d nodes linked to this ways deleted." % (datetime.now(), count_nodes))
 
     self.stdout.write("Process ended ... " + self.style.SUCCESS("OK"))
 
