@@ -1,12 +1,12 @@
 # !/usr/bin/env python3
 from django.core.management.base import BaseCommand, CommandError
 
-from services.algorithms.algorithm_learning import generate_numpy_array_with_training_set, get_test_set, \
-    get_range_values, get_similarity_attribute_reason, save_new_weights, recalculate_pertinence_score, normalize_values
+from services.algorithms.algorithm_learning import LearningAlgorithm
 from services.models import ScheduledWork, PENDING, INPROGRESS, FINALIZED, ERROR, \
     SCHEDULED_WORK_LEARNING_ALGORITHM, Parameters
 from datetime import datetime
 from django.utils import timezone
+import numpy as np
 
 DEBUG = False
 __author__ = 'Amaia Nazabal'
@@ -35,76 +35,103 @@ class Command(BaseCommand):
         weights_type = []
         weights_coordinates = []
 
+        error_rates_name = []
+        error_rates_type = []
+        error_rates_coordinates = []
+
         try:
-
+            learning_algorithm = LearningAlgorithm()
             for i in range(0, quantity):
-                training_set = generate_numpy_array_with_training_set()
+                training_set, test_set = learning_algorithm.generate_numpy_array_with_training_and_test_set()
 
                 if DEBUG:
-                    print("features", training_set[:, :1])
-                    print("target", training_set[:, 3])
+                    print("training set features", training_set[:, :1])
+                    print("training set target", training_set[:, 3])
 
-                range_min_name, range_max_name = get_range_values(training_set[:, :1], training_set[:, 3], 'name')
-                self.stdout.write(
-                    self.style.MIGRATE_HEADING(
-                        "%s INFO: Attribute name range [%f - %f]" % (datetime.now(), range_min_name,
-                                                                     range_max_name)))
+                    print("test set features", test_set[:, :1])
+                    print("test set target", test_set[:, 3])
 
-                if DEBUG:
-                    print("features", training_set[:, 1:2])
-                    print("target", training_set[:, 3])
-
-                range_min_type, range_max_type = get_range_values(training_set[:, 1:2], training_set[:, 3], 'type')
+                influence_name = learning_algorithm.get_similarity_attribute_reason(training_set[:, :1],
+                                                                                    training_set[:, 3], 'name')
 
                 self.stdout.write(
                     self.style.MIGRATE_HEADING(
-                        "%s INFO: Attribute type range [%f - %f]" % (datetime.now(), range_min_type,
-                                                                     range_max_type)))
+                        "%s INFO: Importance name %f" % (datetime.now(), influence_name)))
+
+                error_name_rate = learning_algorithm.validate_attribute_importance(test_set[:, :1], test_set[:, 3],
+                                                                                   influence_name, 'name')
 
                 if DEBUG:
-                    print("features", training_set[:, 2:3])
-                    print("target", training_set[:, 3])
+                    print("training set features", training_set[:, 1:2])
+                    print("training set target", training_set[:, 3])
 
-                range_min_coordinates, range_max_coordinates = get_range_values(training_set[:, 2:3],
-                                                                                training_set[:, 3], 'coordinates')
+                    print("test set features", test_set[:, 1:2])
+                    print("test set target", test_set[:, 3])
+
+                influence_type = learning_algorithm.get_similarity_attribute_reason(training_set[:, 1:2],
+                                                                                    training_set[:, 3], 'type')
+                error_type_rate = learning_algorithm.validate_attribute_importance(test_set[:, 1:2], test_set[:, 3],
+                                                                                   influence_type, 'type')
 
                 self.stdout.write(
-                    self.style.MIGRATE_HEADING("%s INFO: Attribute coordinates range [%f - %f]" % (datetime.now(),
-                                                                                                   range_min_coordinates,
-                                                                                                   range_max_coordinates)))
+                    self.style.MIGRATE_HEADING(
+                        "%s INFO: Importance type %f" % (datetime.now(), influence_type)))
 
-                test_set = get_test_set()
-                reason_name = round(get_similarity_attribute_reason(test_set, 'similarity_name', range_min_name,
-                                                                    range_max_name), 2)
-                reason_type = round(get_similarity_attribute_reason(test_set, 'similarity_type', range_min_type,
-                                                                    range_max_type), 2)
-                reason_coordinates = round(get_similarity_attribute_reason(test_set, 'similarity_coordinates',
-                                                                           range_min_coordinates,
-                                                                           range_max_coordinates), 2)
+                if DEBUG:
+                    print("training set features", training_set[:, 2:3])
+                    print("training set target", training_set[:, 3])
 
-                weight_name, weight_type, weight_coordinates = normalize_values(reason_name, reason_type,
-                                                                                reason_coordinates)
+                    print("test set features", test_set[:, 2:3])
+                    print("test set target", test_set[:, 3])
 
-                weights_name.append(weight_name)
-                weights_type.append(weight_type)
-                weights_coordinates.append(weight_coordinates)
+                influence_coordinates = learning_algorithm.get_similarity_attribute_reason(training_set[:, 2:3],
+                                                                                           training_set[:, 3],
+                                                                                           'coordinates')
+                error_coordinates_rate = learning_algorithm.validate_attribute_importance(test_set[:, 2:3],
+                                                                                          test_set[:, 3],
+                                                                                          influence_coordinates,
+                                                                                          'coordinates')
+                weights_name.append(influence_name)
+                error_rates_name.append(error_name_rate)
+                weights_type.append(influence_type)
+                error_rates_type.append(error_type_rate)
+                weights_coordinates.append(influence_coordinates)
+                error_rates_coordinates.append(error_coordinates_rate)
+
+                self.stdout.write(
+                    self.style.MIGRATE_HEADING(
+                        "%s INFO: Importance coordinates %f" % (datetime.now(), influence_coordinates)))
 
             """
             We calculate the average of the values
             """
-            weight_name = sum(weights_name) / quantity
-            weight_type = sum(weights_type) / quantity
-            weight_coordinates = sum(weights_coordinates) / quantity
+            weight_name = sum(weights_name) / float(quantity)
+            weight_type = sum(weights_type) / float(quantity)
+            weight_coordinates = sum(weights_coordinates) / float(quantity)
 
-            weight_name, weight_type, weight_coordinates = normalize_values(weight_name, weight_type,
-                                                                            weight_coordinates)
+            self.stdout.write(
+                self.style.MIGRATE_HEADING("%s INFO: The average of every attribute is (name, type, coordinates) %f, "
+                                           "%f, %f" % (datetime.now(), weight_name, weight_type, weight_coordinates)))
+
+            error_rate_name = sum(error_rates_name) / float(quantity)
+            error_rate_type = sum(error_rates_type) / float(quantity)
+            error_rate_coordinates = sum(error_rates_coordinates) / float(quantity)
+
+            weights = learning_algorithm.normalize_values(np.array([weight_name, weight_type, weight_coordinates]))
+
             process_time = timezone.now() - scheduled_work.initial_date
+
             self.stdout.write('%s : The process %s ended in %s seconds. The estimated weights: (name, type, '
                               'coordinates) are %f, %f, %f.' % (datetime.now(), scheduled_work.name, process_time,
-                                                                weight_name, weight_type, weight_coordinates))
+                                                                weights[0], weights[1],
+                                                                weights[2]))
 
-            weights_id = save_new_weights(weight_name, weight_type, weight_coordinates)
-            affected_rows = recalculate_pertinence_score(weights_id)
+            self.stdout.write('%s : The error rates are: (name, type, coordinates) are %f, %f, %f.'
+                              % (datetime.now(), error_rate_name, error_rate_type, error_rate_coordinates))
+
+            weights_id = learning_algorithm.save_new_weights(weights[0], weights[1], weights[2])
+            affected_rows = 0
+            # affected_rows = learning_algorithm.recalculate_pertinence_score(weights_id)
 
             scheduled_work.status = FINALIZED
             scheduled_work.final_date = timezone.now()
