@@ -1,6 +1,6 @@
 import threading
 from services.models import SCHEDULED_WORK_IMPORTATION_PROCESS, SCHEDULED_WORK_CORRESPONDENCE_PROCESS, \
-    SCHEDULED_WORK_CORRESPONDENCE_TYPE, Parameters
+    SCHEDULED_WORK_CORRESPONDENCE_TYPE, Parameters, SCHEDULED_WORK_LEARNING_ALGORITHM
 from django.core.management import call_command
 
 
@@ -17,7 +17,8 @@ class BackgroundProcess(threading.Thread):
 
     def run(self):
         try:
-            if self.process in (SCHEDULED_WORK_CORRESPONDENCE_TYPE, SCHEDULED_WORK_CORRESPONDENCE_PROCESS):
+            if self.process in (SCHEDULED_WORK_CORRESPONDENCE_TYPE, SCHEDULED_WORK_CORRESPONDENCE_PROCESS,
+                                SCHEDULED_WORK_LEARNING_ALGORITHM):
                 call_command(self.process)
             elif self.process == SCHEDULED_WORK_IMPORTATION_PROCESS:
                 path = Parameters.objects.only('value').get(name='directory_path_importation').value

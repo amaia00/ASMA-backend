@@ -377,7 +377,6 @@ class CorrespondenceTypesInvalidViewSet(mixins.CreateModelMixin,
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            print("PUT")
             request.data['id'] = type_correspondence.id
             request.data['quantity'] = type_correspondence.quantity + 1
 
