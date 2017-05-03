@@ -17,17 +17,15 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.MIGRATE_LABEL('%s : The process begins.' %
                                      (datetime.now())))
-        scheduled_work = {}
+        scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_CORRESPONDENCE_PROCESS, status=PENDING)
 
         try:
-            # TODO correspondence_check=False
             geoname_entities = Geonames.objects.only('id').filter(correspondence_check=False).values()
             total_rows = len(geoname_entities)
 
             '''
             On garde le processus dans la table avec l'état PENDING
             '''
-            scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_CORRESPONDENCE_PROCESS, status=PENDING)
             scheduled_work.status = INPROGRESS
             scheduled_work.total_rows = total_rows
             scheduled_work.initial_date = timezone.now()
