@@ -374,8 +374,9 @@ def clean_entities_without_name(self):
         fathers_nodes = cursor.fetchall()
         rows = 0
         for node_id in fathers_nodes:
+            node_id = next(iter(node_id or []), None)
             rows += 1
-            Tag.objects.filter(reference=node_id).delete()
+            Tag.objects.filter(referenc=node_id).delete()
             Node.objects.filter(pk=node_id).delete()
             count += 1
 
@@ -395,6 +396,7 @@ def clean_entities_without_name(self):
         fathers_ways = cursor.fetchall()
         rows = 0
         for way_id in fathers_ways:
+            way_id = next(iter(way_id or []), None)
             rows += 1
             Tag.objects.filter(reference=way_id).delete()
             Node.objects.filter(way_reference=way_id).delete()
@@ -418,6 +420,7 @@ def clean_entities_without_name(self):
         fathers_relations = cursor.fetchall()
         rows = 0
         for relation_id in fathers_relations:
+            relation_id = next(iter(relation_id or []), None)
             rows += 1
             Tag.objects.filter(reference=relation_id).delete()
             Node.objects.filter(relation_reference=relation_id).delete()
