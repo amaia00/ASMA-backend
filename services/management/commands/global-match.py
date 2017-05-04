@@ -5,6 +5,7 @@ from services.models import Geonames, ScheduledWork, PENDING, INPROGRESS, FINALI
 from datetime import datetime
 from django.core.management import call_command
 from django.utils import timezone
+from django.db import connection
 
 __author__ = 'Amaia Nazabal'
 
@@ -14,20 +15,22 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        self.stdout.write(
-            self.style.MIGRATE_LABEL('%s : The process begins.' %
-                                     (datetime.now())))
-        scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_CORRESPONDENCE_PROCESS, status=PENDING)
+            self.stdout.write(
+                self.style.MIGRATE_LABEL('%s : The process begins.' %
+                                         (datetime.now())))
+            scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_CORRESPONDENCE_PROCESS, status=PENDING)
 
-        try:
+            # try:
             # TODO: geoname_entities = Geonames.objects.only('id').filter(correspondence_check=False).values()
             # geonames_entities = Geonames.objects.only('id').filter(correspondence_check=False, latitude__range=(46, 47),
             #                                                       longitude__range=(5, 6)).values()
 
-            geonames_entities = Geonames.objects.raw("SELECT id FROM services_geonames WHERE FORMAT(latitude, 1) = 45.7"
-                                                     " AND FORMAT(longitude, 1) = 4.8;")
+            cursor = connection.cursor()
+            cursor.execute("SELECT id FROM services_geonames WHERE FORMAT(latitude, 1) = 45.7  AND FORMAT(longitude, 1) "
+                           "= 4.8")
             # total_rows = len(geonames_entities)
             total_rows = 0
+            geonames_entities = cursor.fetchall()
 
             '''
             On garde le processus dans la table avec l'état PENDING
@@ -37,9 +40,11 @@ class Command(BaseCommand):
             scheduled_work.initial_date = timezone.now()
             scheduled_work.save()
 
-            for geoname_entity in geonames_entities:
+            for geonames_entity in geonames_entities:
+                geonames_entity_id = next(iter(geonames_entity or []), None)
+
                 try:
-                    call_command('correspondance', geoname_entity['id'])
+                    call_command('correspondance', geonames_entity_id)
 
                     scheduled_work.affected_rows += 1
                     scheduled_work.save()
@@ -48,7 +53,7 @@ class Command(BaseCommand):
                     scheduled_work.error_rows += 1
                     scheduled_work.save()
                     raise CommandError('%s Error: %s.Entity id %s' %
-                                       (datetime.now(), str(error), geoname_entity['id']))
+                                       (datetime.now(), str(error), geonames_entity_id))
 
             if scheduled_work.error_rows == scheduled_work.affected_rows:
                 scheduled_work.status = ERROR
@@ -65,9 +70,9 @@ class Command(BaseCommand):
                                                                        scheduled_work.affected_rows,
                                                                        scheduled_work.error_rows,
                                                                        scheduled_work.total_rows))
-        except Exception as error:
-            scheduled_work.status = ERROR
-            scheduled_work.final_date = timezone.now()
-            scheduled_work.save()
-
-            raise CommandError(error)
+        # except Exception as error:
+        #     scheduled_work.status = ERROR
+        #     scheduled_work.final_date = timezone.now()
+        #     scheduled_work.save()
+        #
+        #     raise CommandError(error)
