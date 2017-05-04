@@ -21,14 +21,11 @@ class Command(BaseCommand):
         scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_RECALCULATE_PERTINENCE_SCORE, status=PENDING)
 
         try:
-            geoname_entities = Geonames.objects.only('id').filter(correspondence_check=False).values()
-            total_rows = len(geoname_entities)
-
             '''
             On garde le processus dans la table avec l'état PENDING
             '''
             scheduled_work.status = INPROGRESS
-            scheduled_work.total_rows = total_rows
+            scheduled_work.total_rows = 0
             scheduled_work.initial_date = timezone.now()
             scheduled_work.save()
 
@@ -41,6 +38,7 @@ class Command(BaseCommand):
                 scheduled_work.status = FINALIZED
 
             scheduled_work.affected_rows = affected_rows
+            scheduled_work.total_rows = affected_rows
             scheduled_work.final_date = timezone.now()
             scheduled_work.save()
 
