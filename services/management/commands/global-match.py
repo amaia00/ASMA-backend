@@ -26,7 +26,8 @@ class Command(BaseCommand):
 
             geonames_entities = Geonames.objects.raw("SELECT id FROM services_geonames WHERE FORMAT(latitude, 1) = 45.7"
                                                      " AND FORMAT(longitude, 1) = 4.8;")
-            total_rows = len(geonames_entities)
+            # total_rows = len(geonames_entities)
+            total_rows = 0
 
             '''
             On garde le processus dans la table avec l'état PENDING
