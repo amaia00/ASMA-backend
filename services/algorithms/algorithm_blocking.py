@@ -58,8 +58,69 @@ def blocking_function(entite):
                                         'shape_osm': is_area or shape_osm,
                                         'coordinates': entity_in_ratio['coordinates'],
                                         'tag_list': tag_list})
+        elif name is None:
+            delete_bd(reference, shape_osm)
 
     return list_match_entities
+
+
+def delete_bd(reference, shape):
+    """
+    This method delete all the tags and entities without tag name 
+    :param reference: 
+    :param shape: 
+    :return: 
+    """
+    Tag.objects.filter(reference=reference, type=shape).delete()
+
+    if shape == NODE:
+        Node.objects.filter(pk=reference).delete()
+    elif shape == WAY:
+        nodes = Node.objects.only('id').filter(way_reference__id=reference)
+        for node in nodes:
+            Tag.objects.filter(reference=node['id']).delete()
+            Node.objects.filter(pk=node['id']).delete()
+
+    if shape == RELATION:
+        delete_relation(reference=reference)
+
+
+def delete_relation(reference):
+    """
+    
+    :param reference: 
+    :return: 
+    """
+    count = 0
+    ways = Way.objects.only('id').filter(relation_reference__id=reference)
+    for way in ways:
+        nodes = Node.objects.only('id').filter(way_reference__id=way['id'])
+        for node in nodes:
+            count += 1
+            Tag.objects.filter(reference=node['id']).delete()
+            Node.objects.filter(pk=node['id']).delete()
+
+        Tag.objects.filter(reference=way['id']).delete()
+        Way.objects.filter(pk=way['id']).delete()
+
+    relations = Relation.objects.only('id').filter(relation_reference__id=reference)
+    for relation in relations:
+        ways = Way.objects.only('id').filter(relation_reference__id=relation['id'])
+        for way in ways:
+            count += 1
+            nodes = Node.objects.only('id').filter(way_reference__id=way['id'])
+            for node in nodes:
+                count += 1
+                Tag.objects.filter(reference=node['id']).delete()
+                Node.objects.filter(pk=node['id']).delete()
+
+            Tag.objects.filter(reference=way['id']).delete()
+            Way.objects.filter(pk=way['id']).delete()
+
+        Relation.objects.filter(pk=relation['id']).delete()
+        Tag.objects.filter(reference=relation['id']).delete()
+    
+    print("Tags, nodes, ways and relations deleted", count)
 
 
 def get_object_in_ratio(entity, ratio):
