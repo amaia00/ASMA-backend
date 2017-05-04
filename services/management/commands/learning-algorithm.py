@@ -129,17 +129,12 @@ class Command(BaseCommand):
             self.stdout.write('%s : The error rates are: (name, type, coordinates) are %f, %f, %f.'
                               % (datetime.now(), error_rate_name, error_rate_type, error_rate_coordinates))
 
-            weights_id = learning_algorithm.save_new_weights(weights[0], weights[1], weights[2])
-            affected_rows = 0
-            # affected_rows = learning_algorithm.recalculate_pertinence_score(weights_id)
+            learning_algorithm.save_new_weights(weights[0], weights[1], weights[2])
 
             scheduled_work.status = FINALIZED
             scheduled_work.final_date = timezone.now()
-            scheduled_work.affected_rows = affected_rows
+            scheduled_work.affected_rows = 0
             scheduled_work.save()
-
-            self.stdout.write('%s : The process for recalculate the pertinence score ended. Affected rows: %d'
-                              % (datetime.now(), affected_rows))
 
         except Exception as error:
             scheduled_work.status = ERROR

@@ -51,6 +51,9 @@ class Entity:
         self._position_gps = PositionGPS(latitude=kwargs.get('latitude', 0),
                                          longitude=kwargs.get('longitude', 0))
 
+    def get_id(self):
+        return self._id
+
     def get_name(self):
         return self._name
 

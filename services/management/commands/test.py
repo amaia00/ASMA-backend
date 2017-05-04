@@ -5,7 +5,7 @@ from util.coordinates_matching import matching_coordinates
 from services.models import Geonames, Tag, ParametersScorePertinence, Node
 from services.classes.classes import EntityGeoNames
 from services.algorithms.algorithm_align import match_type_correspondence, match_type_synonyms
-from services.algorithms.algorithm_blocking import blocking_function
+from services.algorithms.algorithm_blocking import blocking_function, get_object_in_ratio
 from decimal import *
 from util.util import print_tags
 from jellyfish import levenshtein_distance
@@ -23,17 +23,26 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         print("hello world")
-        fathers_nodes = Node.objects.only('id').filter(relation_reference__isnull=True, way_reference__isnull=True,
-                                                       checked_name=False)[:1000]
-        for node in fathers_nodes:
-            id = node.id
-            print(node.id)
-            break
+        # fathers_nodes = Node.objects.only('id').filter(relation_reference__isnull=True, way_reference__isnull=True,
+        #                                                checked_name=False)[:1000]
+        # for node in fathers_nodes:
+        #     id = node.id
+        #     print(node.id)
+        #     break
+        #
+        # tag_list = Tag.objects.only('key', 'value').filter(reference=389577997).exclude(key__contains='name')
+        # for tag in tag_list:
+        #     print(tag.key, tag.value)
 
-        tag_list = Tag.objects.only('key', 'value').filter(reference=389577997).exclude(key__contains='name')
-        for tag in tag_list:
-            print(tag.key, tag.value)
+        gn_entity = Geonames.objects.get(pk=8015555)
+        entity = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
+                                longitude=gn_entity.longitude, feature_class=gn_entity.fclass,
+                                feature_code=gn_entity.fcode)
 
+        list = get_object_in_ratio(entity, 1)
+
+        for entity in list:
+            print(entity)
 
         # array = generate_numpy_array_with_trainning_set()
         # print(array.data)

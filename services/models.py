@@ -49,6 +49,7 @@ SCHEDULED_WORK_IMPORTATION_PROCESS = 'importation'
 SCHEDULED_WORK_CORRESPONDENCE_PROCESS = 'global-match'
 SCHEDULED_WORK_CORRESPONDENCE_TYPE = 'types-matching'
 SCHEDULED_WORK_LEARNING_ALGORITHM = 'learning-algorithm'
+SCHEDULED_WORK_RECALCULATE_PERTINENCE_SCORE = 'recalculate-pertinence-score'
 
 
 class Tag(models.Model):

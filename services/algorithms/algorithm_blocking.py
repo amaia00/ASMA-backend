@@ -1,5 +1,5 @@
 from services.algorithms.geolocation import GeoLocation
-from services.models import Parameters, Node, Tag, Relation, Way, NODE, WAY, RELATION
+from services.models import Parameters, Node, Tag, Relation, Way, NODE, WAY, RELATION, CorrespondenceEntity
 import operator
 from util.util import get_name_shape
 
@@ -102,14 +102,17 @@ def get_object_in_ratio(entity, ratio):
     entities_list = []
     for node in node_list:
         point = Node.objects.get(pk=node.id)
-        shape = point.way_reference_id or point.relation_reference_id or node.id
+        shape = get_parent(node.id, node.way_reference_id, node.relation_reference_id)
 
-        entities_list.append({
-            'id': int(float(shape)),
-            'coordinates': (point.latitude, point.longitude)
-        })
+        try:
+            CorrespondenceEntity.objects.only('id').get(reference_gn=entity.get_id(), reference_osm=shape)
+        except CorrespondenceEntity.DoesNotExist:
+            entities_list.append({
+                'id': int(float(shape)),
+                'coordinates': (point.latitude, point.longitude)
+            })
 
-    id = None
+    new_id = None
     coordinates = None
     final_list = []
 
@@ -123,7 +126,7 @@ def get_object_in_ratio(entity, ratio):
 
         (latitude, longitude) = entity_l['coordinates']
 
-        if entity_l['id'] == id:
+        if entity_l['id'] == new_id:
             '''
             If the news coordinates are more closer than the coordinates of the previous point, then we have to replace
             the coordinates and remove the entity of the list, otherwise we ignore the point
@@ -134,12 +137,12 @@ def get_object_in_ratio(entity, ratio):
                     GeoLocation.from_degrees(latitude, longitude)):
 
                 final_list.remove({
-                    'id': id,
+                    'id': new_id,
                     'coordinates': coordinates
                 })
                 final_list.append(entity_l)
                 coordinates = (latitude, longitude)
-                id = entity_l['id']
+                new_id = entity_l['id']
         else:
             '''
             If it's another entity
@@ -147,6 +150,30 @@ def get_object_in_ratio(entity, ratio):
             final_list.append(entity_l)
 
             coordinates = (latitude, longitude)
-            id = entity_l['id']
+            new_id = entity_l['id']
 
     return final_list
+
+
+def get_parent(node_id, node_way_reference_id, node_relation_reference_id):
+    shape_id = node_id
+
+    try:
+        if node_way_reference_id is not None:
+            shape_id = node_way_reference_id
+            way = Way.objects.only('relation_reference_id').get(pk=node_way_reference_id).relation_reference_id
+            node_relation_reference_id = way
+
+        if node_relation_reference_id is not None:
+            shape_id = node_relation_reference_id
+            relation = Relation.objects.only('relation_reference_id').get(pk=node_relation_reference_id).\
+                relation_reference_id
+
+            while relation is not None:
+                shape_id = relation
+                relation = Relation.objects.only('relation_reference_id').get(pk=shape_id).relation_reference_id
+
+    except (Way.DoesNotExist, Relation.DoesNotExist):
+        pass
+
+    return shape_id
