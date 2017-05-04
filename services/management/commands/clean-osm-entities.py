@@ -5,7 +5,7 @@ from services.models import Relation, Tag, Node, Way, Geonames, FeatureCode, REL
     SCHEDULED_WORK_IMPORTATION_PROCESS, PENDING, ERROR, FINALIZED, INPROGRESS, TagForClean
 from datetime import datetime
 from django.utils import timezone
-from django.db import connection
+from django.db import connection, transaction
 
 
 class Command(BaseCommand):
@@ -22,21 +22,21 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """
+            """
+    
+            :param file: 
+            :param args: 
+            :param options: 
+            :return: 
+            """
+            scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_IMPORTATION_PROCESS, status=PENDING)
 
-        :param file: 
-        :param args: 
-        :param options: 
-        :return: 
-        """
-        scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_IMPORTATION_PROCESS, status=PENDING)
+            scheduled_work.status = INPROGRESS
+            scheduled_work.initial_date = timezone.now()
+            scheduled_work.save()
+            begin_process = datetime.now()
 
-        scheduled_work.status = INPROGRESS
-        scheduled_work.initial_date = timezone.now()
-        scheduled_work.save()
-        begin_process = datetime.now()
-
-        try:
+        # try:
             if not options['skip-clean-osm']:
                 self.stdout.write(
                     self.style.MIGRATE_LABEL("Cleaning OSM entities"))
@@ -52,21 +52,20 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('Successfully importation process ", '
                                                  'time the execution de %s' % total_time))
 
-        except (FileNotFoundError, IndexError, Exception) as detail:
-            scheduled_work.status = ERROR
-            scheduled_work.final_date = timezone.now()
-            scheduled_work.save()
+        # except (Exception) as detail:
+        #     scheduled_work.status = ERROR
+        #     scheduled_work.final_date = timezone.now()
+        #     scheduled_work.save()
+        #
+        #     raise CommandError(detail)
 
-            raise CommandError(detail)
 
-
-def generate_tag_for_clean():
-    cursor = connection.cursor()
+def generate_tag_for_clean(cursor):
     cursor.execute("TRUNCATE TABLE {0}".format(TagForClean._meta.db_table))
 
-    cursor.execute("INSERT services_tagforclean SELECT t.id, t.reference FROM services_tag t "
-                   "WHERE NOT EXISTS (SELECT t2.id FROM services_tag t2 WHERE t2.reference = t.reference "
-                   "AND t2.`key` IN ('name', 'name:en'))")
+    cursor.execute("INSERT services_tagforclean SELECT t.id, t.reference FROM services_tag t " +
+                   "WHERE NOT EXISTS (SELECT t2.id FROM services_tag t2 WHERE t2.reference = t.reference " +
+                   "AND t2.key IN ('name', 'name:en'))")
 
 
 def clean_entities_without_name(self):
@@ -79,14 +78,16 @@ def clean_entities_without_name(self):
         self.style.MIGRATE_HEADING("%s INFO: Cleaning OSM Entities" % datetime.now()))
 
     count = 0
-    generate_tag_for_clean()
+    cursor = connection.cursor()
+    generate_tag_for_clean(cursor)
+
     print("%s INFO: All tags loaded." % datetime.now())
 
-    cursor = connection.cursor()
     cursor.execute("SELECT t.id, t.reference FROM services_tagforclean t")
     all_tags = cursor.fetchall()
 
     print("%s INFO: All tags loaded." % datetime.now())
+    transaction.set_autocommit(False)
 
     for tag_id, tag_reference in all_tags:
         count += 1
@@ -114,7 +115,9 @@ def clean_entities_without_name(self):
             pass
 
         Tag.objects.filter(pk=tag_id).delete()
+        transaction.commit()
 
+    transaction.set_autocommit(True)
     print("%s INFO: %d tags deleted." % (datetime.now(), count))
 
     self.stdout.write("Process ended ... " + self.style.SUCCESS("OK"))
