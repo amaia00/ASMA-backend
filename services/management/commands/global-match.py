@@ -21,15 +21,14 @@ class Command(BaseCommand):
             scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_CORRESPONDENCE_PROCESS, status=PENDING)
 
             # try:
-            geoname_entities = Geonames.objects.only('id').filter(correspondence_check=False).values()
+            geonames_entities = Geonames.objects.only('id').filter(correspondence_check=False).values()
             # geonames_entities = Geonames.objects.only('id').filter(correspondence_check=False, latitude__range=(46, 47),
             #                                                       longitude__range=(5, 6)).values()
-
             # cursor = connection.cursor()
             # cursor.execute("SELECT id FROM services_geonames WHERE FORMAT(latitude, 1) = 45.7  AND FORMAT(longitude, 1) "
             #                "= 4.8")
-            # total_rows = len(geonames_entities)
-            total_rows = 0
+            total_rows = len(geonames_entities)
+            # total_rows = 0
             # geonames_entities = cursor.fetchall()
 
             '''
@@ -40,7 +39,7 @@ class Command(BaseCommand):
             scheduled_work.initial_date = timezone.now()
             scheduled_work.save()
 
-            for geonames_entity in geoname_entities:
+            for geonames_entity in geonames_entities:
                 geonames_entity_id = geonames_entity['id']
 
                 try:
