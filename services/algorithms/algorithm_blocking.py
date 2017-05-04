@@ -138,24 +138,25 @@ def get_object_in_ratio(entity, ratio):
                                    entity.get_position_gps().get_longitude())
 
     (min_loc, max_loc) = loc.bounding_locations(ratio)
-    (lat_min, long_min) = min_loc.get_degres_coordinates()
-    (lat_max, long_max) = max_loc.get_degres_coordinates()
+    (lat_min, long_min) = min_loc.get_radians_coordinates()
+    (lat_max, long_max) = max_loc.get_radians_coordinates()
 
-    query = "SELECT id FROM services_node WHERE latitude >= %(lat_min)s AND latitude <= %(lat_max)s" \
-            " AND (longitude >= %(long_min)s "
+    query = "SELECT id FROM services_node n WHERE RADIANS(latitude) >= %(lat_min)s AND RADIANS(latitude) <= " \
+            "%(lat_max)s  AND (RADIANS(longitude) >= %(long_min)s "
 
     query += "OR " if loc.meridian180_within_distance(ratio) else "AND "
 
-    query += "longitude <= %(long_max)s) AND ACOS(SIN(%(lat_loc)s) * SIN(latitude) + COS(%(lat_loc)s) * COS(latitude)" \
-             " * COS(longitude - %(long_loc)s)) <= %(ang_radius)s"
+    query += "RADIANS(longitude) <= %(long_max)s) AND ACOS(SIN(%(lat_loc)s) * SIN(RADIANS(latitude)) + " \
+             "COS(%(lat_loc)s) * COS(RADIANS(latitude)) * COS(RADIANS(longitude) - %(long_loc)s)) <= %(ang_radius)s"
 
+    lat_loc, long_loc = loc.get_radians_coordinates()
     params = {
         'lat_min': lat_min,
         'long_min': long_min,
         'lat_max': lat_max,
         'long_max': long_max,
-        'lat_loc': entity.get_position_gps().get_latitude(),
-        'long_loc': entity.get_position_gps().get_longitude(),
+        'lat_loc': lat_loc,
+        'long_loc': long_loc,
         'ang_radius': loc.get_angular_radius(distance=ratio)
     }
 
