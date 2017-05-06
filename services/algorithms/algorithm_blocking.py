@@ -61,6 +61,7 @@ def blocking_function(entite):
         elif name is None:
             delete_bd(reference, shape_osm)
 
+    del list_entities_in_ratio
     return list_match_entities
 
 
@@ -165,13 +166,15 @@ def get_object_in_ratio(entity, ratio):
     for node in node_list:
         point = Node.objects.get(pk=node.id)
         shape = get_parent(node.id, node.way_reference_id, node.relation_reference_id)
+        distance = loc.distance_to(GeoLocation.from_degrees(point.latitude, point.longitude))
 
         try:
             CorrespondenceEntity.objects.only('id').get(reference_gn=entity.get_id(), reference_osm=shape)
         except CorrespondenceEntity.DoesNotExist:
             entities_list.append({
                 'id': int(float(shape)),
-                'coordinates': (point.latitude, point.longitude)
+                'coordinates': (point.latitude, point.longitude),
+                'distance': distance
             })
 
     new_id = None
@@ -214,7 +217,11 @@ def get_object_in_ratio(entity, ratio):
             coordinates = (latitude, longitude)
             new_id = entity_l['id']
 
-    return final_list
+    first_fifty = final_list.sort(key=operator.itemgetter('distance'))[:50]
+    del entities_list
+    del final_list
+
+    return first_fifty
 
 
 def get_parent(node_id, node_way_reference_id, node_relation_reference_id):

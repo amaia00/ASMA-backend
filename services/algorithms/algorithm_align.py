@@ -122,15 +122,16 @@ def match_type_synonyms(entity_gn, tag_list):
     param_api_hash_key = Parameters.objects.get(name='api_synonyms_hash_key').value
     param_api_hash_value = Parameters.objects.get(name='api_synonyms_hash_value').value
 
+    synonyms = []
     try:
-        r = requests.get(param_api_url + feature_code.name,
-                         headers={param_api_hash_key: param_api_hash_value})
+        if feature_code.name != 'fourth-order administrative division':
+            r = requests.get(param_api_url + feature_code.name,
+                             headers={param_api_hash_key: param_api_hash_value})
 
-        json_object = json.loads(r.text)
-        synonyms = json_object["tags"]
+            json_object = json.loads(r.text)
+            synonyms = json_object["tags"]
     except Exception as error:
         print("Error synonyms service" + str(error))
-        synonyms = []
 
     similarity_type_level = 0
     tag_match = ''

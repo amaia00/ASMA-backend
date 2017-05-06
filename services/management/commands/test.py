@@ -5,7 +5,7 @@ from util.coordinates_matching import matching_coordinates
 from services.models import Geonames, Tag, ParametersScorePertinence, Node
 from services.classes.classes import EntityGeoNames
 from services.algorithms.algorithm_align import match_type_correspondence, match_type_synonyms
-from .another import get_object_in_ratio
+from services.algorithms.algorithm_blocking import get_object_in_ratio
 from decimal import *
 from util.util import print_tags
 from jellyfish import levenshtein_distance
@@ -35,14 +35,16 @@ class Command(BaseCommand):
         #     print(tag.key, tag.value)
 
         gn_entity = Geonames.objects.get(pk=8015555)
-        entity = EntityGeoNames(id=1, name=gn_entity.name, latitude=Decimal('42.6259935'),
-                                longitude=Decimal('1.6192744'), feature_class='',
-                                feature_code='')
+        entity = EntityGeoNames(id=1, name=gn_entity.name, latitude=gn_entity.latitude,
+                                longitude=gn_entity.longitude, feature_class=gn_entity.fclass,
+                                feature_code=gn_entity.fcode)
 
-        list = get_object_in_ratio(entity, 1)
+        list = get_object_in_ratio(entity, 0.01)
 
+        i = 0
         for entity in list:
-            print(entity)
+            i += 1
+            print(i, entity)
 
         # array = generate_numpy_array_with_trainning_set()
         # print(array.data)
