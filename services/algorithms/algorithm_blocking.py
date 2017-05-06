@@ -58,7 +58,7 @@ def blocking_function(entite):
                                         'shape_osm': is_area or shape_osm,
                                         'coordinates': entity_in_ratio['coordinates'],
                                         'tag_list': tag_list})
-        elif name is None:
+        elif not name:
             delete_bd(reference, shape_osm)
 
     del list_entities_in_ratio
@@ -77,7 +77,7 @@ def delete_bd(reference, shape):
     if shape == NODE:
         Node.objects.filter(pk=reference).delete()
     elif shape == WAY:
-        nodes = Node.objects.only('id').filter(way_reference__id=reference)
+        nodes = Node.objects.only('id').filter(way_reference__id=reference).values()
         for node in nodes:
             Tag.objects.filter(reference=node['id']).delete()
             Node.objects.filter(pk=node['id']).delete()
@@ -93,9 +93,9 @@ def delete_relation(reference):
     :return: 
     """
     count = 0
-    ways = Way.objects.only('id').filter(relation_reference__id=reference)
+    ways = Way.objects.only('id').filter(relation_reference__id=reference).values()
     for way in ways:
-        nodes = Node.objects.only('id').filter(way_reference__id=way['id'])
+        nodes = Node.objects.only('id').filter(way_reference__id=way['id']).values()
         for node in nodes:
             count += 1
             Tag.objects.filter(reference=node['id']).delete()
@@ -104,12 +104,12 @@ def delete_relation(reference):
         Tag.objects.filter(reference=way['id']).delete()
         Way.objects.filter(pk=way['id']).delete()
 
-    relations = Relation.objects.only('id').filter(relation_reference__id=reference)
+    relations = Relation.objects.only('id').filter(relation_reference__id=reference).values()
     for relation in relations:
-        ways = Way.objects.only('id').filter(relation_reference__id=relation['id'])
+        ways = Way.objects.only('id').filter(relation_reference__id=relation['id']).values()
         for way in ways:
             count += 1
-            nodes = Node.objects.only('id').filter(way_reference__id=way['id'])
+            nodes = Node.objects.only('id').filter(way_reference__id=way['id']).values()
             for node in nodes:
                 count += 1
                 Tag.objects.filter(reference=node['id']).delete()
