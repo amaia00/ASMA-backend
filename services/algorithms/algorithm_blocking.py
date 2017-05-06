@@ -4,15 +4,17 @@ import operator
 from util.util import get_name_shape
 
 
-def blocking_function(entite):
+def blocking_function(entite, param_distance_ratio=False):
     """
 
     Reference: http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates
     :param entite:
+    :param param_distance_ratio:
     :return:
     """
     list_match_entities = []
-    param_distance_ratio = float(Parameters.objects.get(name='search_radius_for_blocking').value)
+    if not param_distance_ratio:
+        param_distance_ratio = float(Parameters.objects.get(name='search_radius_for_blocking').value)
     list_entities_in_ratio = get_object_in_ratio(entite, param_distance_ratio)
 
     for entity_in_ratio in list_entities_in_ratio:
@@ -58,8 +60,8 @@ def blocking_function(entite):
                                         'shape_osm': is_area or shape_osm,
                                         'coordinates': entity_in_ratio['coordinates'],
                                         'tag_list': tag_list})
-        elif not name:
-            delete_bd(reference, shape_osm)
+        # elif not name:
+        #     delete_bd(reference, shape_osm)
 
     del list_entities_in_ratio
     return list_match_entities
@@ -217,11 +219,10 @@ def get_object_in_ratio(entity, ratio):
             coordinates = (latitude, longitude)
             new_id = entity_l['id']
 
-    first_fifty = final_list.sort(key=operator.itemgetter('distance'))[:50]
+    final_list.sort(key=operator.itemgetter('distance'))
     del entities_list
-    del final_list
 
-    return first_fifty
+    return final_list[:50]
 
 
 def get_parent(node_id, node_way_reference_id, node_relation_reference_id):

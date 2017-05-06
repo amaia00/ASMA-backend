@@ -22,14 +22,25 @@ class Command(BaseCommand):
             nargs='+',
             help="The geonanme id for made the matching with osm entities.")
 
+        parser.add_argument(
+            '--radium-search',
+            default=False,
+            metavar="int",
+            dest='radium-search',
+            help="The search ratio for the blocking")
+
     def handle(self, geoname_id, *args, **options):
-        try:
+        # try:
             gn_entity = Geonames.objects.get(pk=geoname_id[0])
             entity = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
                                     longitude=gn_entity.longitude, feature_class=gn_entity.fclass,
                                     feature_code=gn_entity.fcode)
 
-            list_block_entities = blocking_function(entity)
+            search_ratio = False
+            if options.get('radium-search', False):
+                search_ratio = float(options['radium-search'])
+
+            list_block_entities = blocking_function(entity, search_ratio)
             list_align_entities = align_algorithme(entity, list_block_entities)
             for entity in list_align_entities:
                 (latitude_osm, longitude_osm) = entity['coordinates_osm']
@@ -74,5 +85,5 @@ class Command(BaseCommand):
 
             print("Quantite de matchs: ", len(list_align_entities))
 
-        except Exception as error:
-            raise CommandError(error)
+        # except Exception as error:
+        #     raise CommandError(error)
