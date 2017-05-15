@@ -73,6 +73,8 @@ class Command(BaseCommand):
                 Pour obtenir une distribution uniforme on peut appliquer la fonction 
                 softmax et après normaliser les valeurs entre 0 et 1 dans les ensembles de 
                 training et test
+                On peut appeler ainsi la methode normalize et softmax qui sont dans la 
+                classe LearningAlgorithme.
                 """
                 influence_type = learning_algorithm.get_similarity_attribute_reason(training_set[:, 1:2],
                                                                                     training_set[:, 3], 'type')
@@ -94,6 +96,10 @@ class Command(BaseCommand):
                 Étant donnée que les indices de similarité des coordinates sont plutôt elevés
                 [0.9, 1] on peut normaliser les valeurs avant de les envoyer vers l'algorihtme
                 d'apprentissage.
+                On peut appeler ainsi la methode normalize qui est dans la classe Learning 
+                Algorithme.
+                
+                Il faudrait le faire pour l'ensemble de trainning, et l'ensemble de test.
                 """
                 influence_coordinates = learning_algorithm.get_similarity_attribute_reason(training_set[:, 2:3],
                                                                                            training_set[:, 3],
