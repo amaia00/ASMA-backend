@@ -143,8 +143,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# TODO Add only the origin allowed
-# CORS_ORIGIN_WHITELIST = (
-#    'localhost:8000',
-#)
 CORS_ORIGIN_ALLOW_ALL = True

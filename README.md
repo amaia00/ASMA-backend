@@ -1,83 +1,85 @@
-DROP DATABASE TER;
+# ASMA BackEnd
+
+### Auteurs
+
+- Amaia NAZABAL 11614291 **Email**: amaia.nazabal-ruiz-diaz@etu.univ-lyon1.fr
+- Sofiaa FADDI 11614340 **Email**: sofiaa.faddi@etu.univ-lyon1.fr
+
+### Unité d'Enseignement
+
+- MIF11 - Projet d'Orientation en M2
+- Encadrant: Fabien DUCHATEAU
+- [Page du sujet](http://liris.cnrs.fr/~fduchate/ens/MIF20/sujets/2016-2017/sujet-integration.pdf)
+
+## Requeriments
+
+* Python 3.5
+* Django 1.10.5
+* MySQL 5.7.17
+
+# Démarrage
+
+Rentrer dans la BD Mysql et exécuter. À vous de modifier le nom et le pass de l'utilisateur, si c'est le cas vous pouvez modifier le fichier `TER/settings.py` pour indiquer le nom, password et nom de la BD.
+
+```mysql
+CREATE DATABASE TER;
 CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin123'; 
 CREATE DATABASE TER CHARACTER SET UTF8;
 GRANT ALL PRIVILEGES ON TER.* TO admin@localhost;
 FLUSH PRIVILEGES;
+```
 
+Rentrer dans le dossier du projet et exécuter
 
-./manage.py makemigrations services
-./manage.py migrate
+```bash
+> cd TER_BACK_END
+> ./manage.py makemigrations services
+> ./manage.py migrate
+> ./manage createsuperuser
+```
+Éxecutez dans la BD:
+```mysql
 
-Execute test algo
-./manage.py importation --skip-geonames --skip-osm  ""
+ALTER TABLE TER.services_geoname MODIFY COLUMN name VARCHAR(10000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
 
-
-Execute osm importation
-./manage.py importation TER/xml_files/andorra-latest.xml  --skip-geonames
-
-
-Run server
-python manage.py runserver
-
-Execute geonames importation
-./manage.py import TER/xml_files/AD.txt  --skip-osm -file3 TER/xml_files/featureCodes_en.txt 
-./manage.py importation TER/xml_files/FR.txt  --skip-osm
-
-
-./manage.py correspondance 8224609
-
-
-ps aux | grep mysql
-kill -9 8922
-mysql.server stop
-mysql.server start
-
-
---> Pour lancer le processus de correspondance global
-TRUNCATE TABLE services_correspondencevalide
-TRUNCATE TABLE services_correspondenceinvalide
-TRUNCATE TABLE services_correspondenceentity
-
-
-ALTER TABLE TER.services_geoname MODIFY COLUMN name VARCHAR(10000)
-    CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
-
-ALTER TABLE
-    TER.services_geoname
+ALTER TABLE TER.services_geoname
     CONVERT TO CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
-
-DELETE FROM services_geoname
-WHERE correspondence_check = 0
     
-var1 varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL
 
-ALTER TABLE TER.services_tag MODIFY COLUMN value VARCHAR(300)
+ALTER TABLE TER.services_tag MODIFY COLUMN `value` VARCHAR(300)
     CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL;
 
-ALTER TABLE
-    TER.services_tag
+ALTER TABLE TER.services_tag
     CONVERT TO CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
+```
+
+# Getting started
+### Pour exécuter le serveur:
+```bash
+./manage.py runserver
+```
+Ça lance l'application dans [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+### Pour exécuter l'importation:
+#### OpenStreetMap
+```bash
+./manage.py importation --skip-geonames fichier.xml
+```
+#### GeoNames
+```bash
+./manage.py importation --skip-osm fichier.txt 
+./manage.py importation fichier.txt  --skip-osm -file3 featureCode.txt
+```
+
+### Pour exécuter une correspondance pour une entité specifique GN
+```bash
+./manage.py correspondance [geoname_id]
+```
 
 
-
-DELETE FROM services_tag;
-DELETE FROM services_node;
-DELETE FROM services_way;
-DELETE FROM services_relation;
-
-
-TRUNCATE TABLE services_geonames;
-
-
-
-TRUNCATE TABLE services_correspondenceentity;
-
-TRUNCATE TABLE services_correspondencevalide;
-
-TRUNCATE TABLE services_correspondenceinvalide;
 
 
 
