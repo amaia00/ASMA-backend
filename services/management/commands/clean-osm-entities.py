@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from django.core.management.base import BaseCommand, CommandError
-from services.models import Relation, Tag, Node, Way, Geonames, FeatureCode, RELATION, NODE, WAY, ScheduledWork, \
+from services.models import Relation, Tag, Node, Way, ScheduledWork, \
     SCHEDULED_WORK_IMPORTATION_PROCESS, PENDING, ERROR, FINALIZED, INPROGRESS, TagForClean
 from datetime import datetime
 from django.utils import timezone
@@ -9,7 +9,7 @@ from django.db import connection, transaction
 
 
 class Command(BaseCommand):
-    help = 'Closes the specified poll for voting'
+    help = 'Clean the DB, suprime all the entities without name. '
 
     def add_arguments(self, parser):
 
@@ -22,21 +22,21 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-            """
-    
-            :param file: 
-            :param args: 
-            :param options: 
-            :return: 
-            """
-            scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_IMPORTATION_PROCESS, status=PENDING)
+        """
 
-            scheduled_work.status = INPROGRESS
-            scheduled_work.initial_date = timezone.now()
-            scheduled_work.save()
-            begin_process = datetime.now()
+        :param file: 
+        :param args: 
+        :param options: 
+        :return: 
+        """
+        scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_IMPORTATION_PROCESS, status=PENDING)
 
-        # try:
+        scheduled_work.status = INPROGRESS
+        scheduled_work.initial_date = timezone.now()
+        scheduled_work.save()
+        begin_process = datetime.now()
+
+        try:
             if not options['skip-clean-osm']:
                 self.stdout.write(
                     self.style.MIGRATE_LABEL("Cleaning OSM entities"))
@@ -52,15 +52,20 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('Successfully importation process ", '
                                                  'time the execution de %s' % total_time))
 
-        # except (Exception) as detail:
-        #     scheduled_work.status = ERROR
-        #     scheduled_work.final_date = timezone.now()
-        #     scheduled_work.save()
-        #
-        #     raise CommandError(detail)
+        except Exception as detail:
+            scheduled_work.status = ERROR
+            scheduled_work.final_date = timezone.now()
+            scheduled_work.save()
+
+            raise CommandError(detail)
 
 
 def generate_tag_for_clean(cursor):
+    """
+    This method generate a table with all the tags without name
+    :param cursor: 
+    :return: 
+    """
     cursor.execute("TRUNCATE TABLE {0}".format(TagForClean._meta.db_table))
 
     cursor.execute("INSERT services_tagforclean SELECT t.id, t.reference FROM services_tag t " +
@@ -70,6 +75,7 @@ def generate_tag_for_clean(cursor):
 
 def clean_entities_without_name(self):
     """
+    This method take all the tags without name and suppress every entity with this tags.
     :param self: 
     :return: 
     """
@@ -125,6 +131,7 @@ def clean_entities_without_name(self):
 
 def another_language(key):
     """
+    This method verify if the tag has a name or not
 
     :param key:
     :return: 

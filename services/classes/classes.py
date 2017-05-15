@@ -1,9 +1,5 @@
 
 class PositionGPS:
-    """
-
-    """
-
     def __init__(self, latitude, longitude):
         """
 

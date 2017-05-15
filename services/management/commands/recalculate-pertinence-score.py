@@ -11,7 +11,8 @@ __author__ = 'Amaia Nazabal'
 
 
 class Command(BaseCommand):
-    help = ''
+    help = 'This methode recalculate the pertinence score according to the last value active ' \
+           'in the table of parameters score pertinenece'
 
     def handle(self, *args, **options):
 

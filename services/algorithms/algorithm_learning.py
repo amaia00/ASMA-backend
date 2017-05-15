@@ -10,6 +10,9 @@ DEBUG = False
 
 class LearningAlgorithm:
     def __init__(self):
+        """
+        Retrieve the data of DB with the defined parameters.
+        """
         self.precision = Decimal(Parameters.objects.only('value')
                                  .get(name='precision_of_calculation_of_range_decision_three').value)
         self.iteration = 0
@@ -37,6 +40,7 @@ class LearningAlgorithm:
                                float(correspondence.similarity_coordinates), validation])
 
         result_array = np.array([row for row in list_array], dtype='f')
+
         self.division = int(self.training_set_size / self.test_set_size)
         self.results = np.vsplit(result_array, self.division)
         self.universe = result_array
@@ -45,6 +49,11 @@ class LearningAlgorithm:
             print("universe", self.universe)
 
     def generate_numpy_array_with_training_and_test_set(self):
+        """
+        Take the value of the DB and generate the set for training and test by iteration.
+        
+        :return: 
+        """
         self.test_set = self.results[self.iteration]
         self.training_set = None
 
@@ -65,6 +74,13 @@ class LearningAlgorithm:
         return self.training_set, self.test_set
 
     def get_similarity_attribute_reason(self, features, target, attribute=''):
+        """
+        
+        :param features: 
+        :param target: 
+        :param attribute: 
+        :return: 
+        """
         similarity_attribute = tree.DecisionTreeClassifier()
         similarity_attribute = similarity_attribute.fit(features, target)
 
@@ -90,6 +106,13 @@ class LearningAlgorithm:
 
     @staticmethod
     def save_new_weights(weight_name, weight_type, weight_coordinates):
+        """
+        
+        :param weight_name: 
+        :param weight_type: 
+        :param weight_coordinates: 
+        :return: 
+        """
         ParametersScorePertinence.objects.filter(name='weight_matching_global', all_types=1, active=True) \
             .update(active=False)
         params = ParametersScorePertinence(name='weight_matching_global', all_types=1, active=True,
@@ -101,6 +124,11 @@ class LearningAlgorithm:
 
     @staticmethod
     def recalculate_pertinence_score(weights_id):
+        """
+        
+        :param weights_id: 
+        :return: 
+        """
         correspondences = CorrespondenceEntity.objects.only('id').all()
         count = len(correspondences)
         for correspondence_id in correspondences:
@@ -120,6 +148,11 @@ class LearningAlgorithm:
 
     @staticmethod
     def normalize_values(array):
+        """
+        Normalize 3 values between [0, 1]
+        :param array: 
+        :return: 
+        """
         total = sum(array)
         return array[0] / total, array[1] / total, array[2] / total
 
@@ -128,7 +161,18 @@ class LearningAlgorithm:
         """
         Compute softmax values for each sets of scores in x.
         
-        Rows are scores for each class. 
-        Columns are predictions (samples).
+        The addition between all the elements return 1.
+        We can use this function to convert discrete distribution to an uniforme.
+        
+        Reference: https://en.wikipedia.org/wiki/Softmax_function
         """
         return np.exp(array) / np.sum(np.exp(array), axis=0)
+
+    @staticmethod
+    def normalize(array):
+        """
+        Normalize all the values of array between [0, 1]
+        :param array: 
+        :return: 
+        """
+        return array / array.max(axis=0)

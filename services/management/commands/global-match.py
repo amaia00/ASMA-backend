@@ -5,7 +5,6 @@ from services.models import Geonames, ScheduledWork, PENDING, INPROGRESS, FINALI
 from datetime import datetime
 from django.core.management import call_command
 from django.utils import timezone
-from django.db import connection
 
 __author__ = 'Amaia Nazabal'
 
@@ -15,21 +14,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-            self.stdout.write(
-                self.style.MIGRATE_LABEL('%s : The process begins.' %
+        self.stdout.write(
+            self.style.MIGRATE_LABEL('%s : The process begins.' %
                                          (datetime.now())))
-            scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_CORRESPONDENCE_PROCESS, status=PENDING)
+        scheduled_work = ScheduledWork.objects.get(name=SCHEDULED_WORK_CORRESPONDENCE_PROCESS, status=PENDING)
 
-            # try:
+        try:
             geonames_entities = Geonames.objects.only('id').filter(correspondence_check=False).values()
-            # geonames_entities = Geonames.objects.only('id').filter(correspondence_check=False, latitude__range=(46, 47),
-            #                                                       longitude__range=(5, 6)).values()
-            # cursor = connection.cursor()
-            # cursor.execute("SELECT id FROM services_geonames WHERE FORMAT(latitude, 1) = 45.7  AND FORMAT(longitude, 1) "
-            #                "= 4.8")
+
             total_rows = len(geonames_entities)
-            # total_rows = 0
-            # geonames_entities = cursor.fetchall()
 
             '''
             On garde le processus dans la table avec l'état PENDING
@@ -69,9 +62,9 @@ class Command(BaseCommand):
                                                                        scheduled_work.affected_rows,
                                                                        scheduled_work.error_rows,
                                                                        scheduled_work.total_rows))
-        # except Exception as error:
-        #     scheduled_work.status = ERROR
-        #     scheduled_work.final_date = timezone.now()
-        #     scheduled_work.save()
-        #
-        #     raise CommandError(error)
+        except Exception as error:
+            scheduled_work.status = ERROR
+            scheduled_work.final_date = timezone.now()
+            scheduled_work.save()
+
+            raise CommandError(error)

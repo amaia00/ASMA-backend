@@ -14,6 +14,13 @@ class Command(BaseCommand):
            ' of people how made the correspondences.'
 
     def handle(self, *args, **options):
+        """
+        This method make the correspondence between all the types which was validated
+         before for the user.
+        :param args: 
+        :param options: 
+        :return: 
+        """
         self.stdout.write(
             self.style.MIGRATE_LABEL('%s : The process begins.' %
                                      (datetime.now())))

@@ -60,6 +60,8 @@ def blocking_function(entite, param_distance_ratio=False):
                                         'shape_osm': is_area or shape_osm,
                                         'coordinates': entity_in_ratio['coordinates'],
                                         'tag_list': tag_list})
+        # At first we thought of an approach that takes care of deletion at the same
+        # time as matching. But this approach is extremely slow.
         # elif not name:
         #     delete_bd(reference, shape_osm)
 
@@ -90,7 +92,7 @@ def delete_bd(reference, shape):
 
 def delete_relation(reference):
     """
-    
+    This method suppress a relation without name
     :param reference: 
     :return: 
     """
@@ -132,7 +134,8 @@ def get_object_in_ratio(entity, ratio):
     :param ratio: the distance with we going to search others nodes
     :return: the list the nodes wich are in the ratio
 
-    This function returns all the nodes which are in a specific ratio of the entity sended
+    This function returns all the nodes which are in a specific ratio of the entity sent with 
+    the distance to the geonames entity.
 
     Reference: http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates
     """
@@ -182,9 +185,9 @@ def get_object_in_ratio(entity, ratio):
     new_id = None
     coordinates = None
     final_list = []
+    distance = 1000
 
     entities_list.sort(key=operator.itemgetter('id'))
-
     """
     We reduce the list for erase entities duplicates
     Control cut
@@ -198,18 +201,17 @@ def get_object_in_ratio(entity, ratio):
             If the news coordinates are more closer than the coordinates of the previous point, then we have to replace
             the coordinates and remove the entity of the list, otherwise we ignore the point
             '''
-            (lat_before, long_before) = coordinates
-
-            if coordinates and loc.distance_to(GeoLocation.from_degrees(lat_before, long_before)) >= loc.distance_to(
-                    GeoLocation.from_degrees(latitude, longitude)):
-
+            if coordinates and distance > entity_l['distance']:
                 final_list.remove({
                     'id': new_id,
-                    'coordinates': coordinates
+                    'coordinates': coordinates,
+                    'distance': distance
                 })
+
                 final_list.append(entity_l)
                 coordinates = (latitude, longitude)
                 new_id = entity_l['id']
+                distance = entity_l['distance']
         else:
             '''
             If it's another entity
@@ -218,14 +220,26 @@ def get_object_in_ratio(entity, ratio):
 
             coordinates = (latitude, longitude)
             new_id = entity_l['id']
+            distance = entity_l['distance']
 
     final_list.sort(key=operator.itemgetter('distance'))
     del entities_list
 
-    return final_list[:50]
+    entities_block = int(Parameters.objects.only('value').get(name='quantity_of_elements_in_blocking_algorithm').value)
+
+    return final_list[:entities_block]
 
 
 def get_parent(node_id, node_way_reference_id, node_relation_reference_id):
+    """
+    This method retrieve the parent of a node. Usually the parent is the Way or Relation 
+    without another reference to another shape.
+    
+    :param node_id: 
+    :param node_way_reference_id: 
+    :param node_relation_reference_id: 
+    :return: 
+    """
     shape_id = node_id
 
     try:

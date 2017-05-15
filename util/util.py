@@ -1,6 +1,7 @@
 from decimal import Decimal
 import numpy as np
 
+
 def has_name(tag):
     """
     This function check if the object has or not the name tag

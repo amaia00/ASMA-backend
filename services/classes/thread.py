@@ -7,6 +7,10 @@ from django.core.management import call_command
 class BackgroundProcess(threading.Thread):
 
     def __init__(self, **kwargs):
+        """
+        
+        :param kwargs: 
+        """
         threading.Thread.__init__(self)
         self.threadID = kwargs.get('thread_id')
         self.name = kwargs.get('name')
@@ -16,6 +20,10 @@ class BackgroundProcess(threading.Thread):
         self.provider = kwargs.get('provider')
 
     def run(self):
+        """
+        Execute the process in another thread calling by django commands
+        :return: 
+        """
         try:
             if self.process in (SCHEDULED_WORK_CORRESPONDENCE_TYPE, SCHEDULED_WORK_CORRESPONDENCE_PROCESS,
                                 SCHEDULED_WORK_LEARNING_ALGORITHM):

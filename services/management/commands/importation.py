@@ -82,49 +82,49 @@ class Command(BaseCommand):
         scheduled_work.save()
         begin_process = datetime.now()
 
-        # try:
+        try:
 
-        if not options['skip-osm']:
-            self.stdout.write(
-                self.style.MIGRATE_LABEL("OSM Importation"))
+            if not options['skip-osm']:
+                self.stdout.write(
+                    self.style.MIGRATE_LABEL("OSM Importation"))
 
-            print("%s INFO: File %s loaded." % (datetime.now(), file[0]))
+                print("%s INFO: File %s loaded." % (datetime.now(), file[0]))
 
-            osm_importation(self, file[0], scheduled_work)
-            clean_entities_without_name(self)
+                osm_importation(self, file[0], scheduled_work)
+                clean_entities_without_name(self)
 
-        if not options['skip_geonames']:
-            self.stdout.write(
-                self.style.MIGRATE_LABEL("GeoNames Importation"))
+            if not options['skip_geonames']:
+                self.stdout.write(
+                    self.style.MIGRATE_LABEL("GeoNames Importation"))
 
-            file = options['file2'] or file[0]
-            geonames_importation(self, file)
+                file = options['file2'] or file[0]
+                geonames_importation(self, file)
 
-            if not options['skip-features']:
-                file = options['file3']
-                features_importation(file)
+                if not options['skip-features']:
+                    file = options['file3']
+                    features_importation(file)
 
-        if not options['skip-clean-osm']:
-            self.stdout.write(
-                self.style.MIGRATE_LABEL("Cleaning OSM entities"))
+            if not options['skip-clean-osm']:
+                self.stdout.write(
+                    self.style.MIGRATE_LABEL("Cleaning OSM entities"))
 
-            clean_entities_without_name(self)
+                clean_entities_without_name(self)
 
-        total_time = datetime.now() - begin_process
+            total_time = datetime.now() - begin_process
 
-        scheduled_work.status = FINALIZED
-        scheduled_work.final_date = timezone.now()
-        scheduled_work.save()
+            scheduled_work.status = FINALIZED
+            scheduled_work.final_date = timezone.now()
+            scheduled_work.save()
 
-        self.stdout.write(self.style.SUCCESS('Successfully importation process "%s", '
-                                             'time the execution de %s' % (file, total_time)))
+            self.stdout.write(self.style.SUCCESS('Successfully importation process "%s", '
+                                                 'time the execution de %s' % (file, total_time)))
 
-        # except (FileNotFoundError, IndexError, Exception) as detail:
-        #     scheduled_work.status = ERROR
-        #     scheduled_work.final_date = timezone.now()
-        #     scheduled_work.save()
-        #
-        #     raise CommandError(detail)
+        except (FileNotFoundError, IndexError, Exception) as detail:
+            scheduled_work.status = ERROR
+            scheduled_work.final_date = timezone.now()
+            scheduled_work.save()
+
+            raise CommandError(detail)
 
 
 def geonames_importation(self, file):
@@ -167,6 +167,12 @@ def geonames_importation(self, file):
 
 
 def features_importation(file):
+    """
+    The importation of GN features. We can skip this step with the option 
+    --skip-features-geonames
+    :param file: 
+    :return: 
+    """
     print("%s INFO: Importation feaures types." % datetime.now())
 
     file_object = open(file, 'r')
@@ -184,7 +190,7 @@ def features_importation(file):
 
 def osm_importation(self, file, scheduled_work):
     """
-    
+    Read of file line by line for find every tag 
     :param self: 
     :param file: 
     :param scheduled_work: 
@@ -353,7 +359,7 @@ def relation_importation(xml_relation, xml_childs):
 
 def clean_entities_without_name(self):
     """
-
+    This method has another approach in the file 'clean-osm-entities.py' But this works anyway.
     :param self: 
     :return: 
     """
@@ -376,7 +382,7 @@ def clean_entities_without_name(self):
         for node_id in fathers_nodes:
             node_id = next(iter(node_id or []), None)
             rows += 1
-            Tag.objects.filter(referenc=node_id).delete()
+            Tag.objects.filter(reference=node_id, type=NODE).delete()
             Node.objects.filter(pk=node_id).delete()
             count += 1
 
@@ -398,7 +404,7 @@ def clean_entities_without_name(self):
         for way_id in fathers_ways:
             way_id = next(iter(way_id or []), None)
             rows += 1
-            Tag.objects.filter(reference=way_id).delete()
+            Tag.objects.filter(reference=way_id, type=WAY).delete()
             Node.objects.filter(way_reference=way_id).delete()
             Way.objects.filter(pk=way_id).delete()
 
@@ -422,7 +428,7 @@ def clean_entities_without_name(self):
         for relation_id in fathers_relations:
             relation_id = next(iter(relation_id or []), None)
             rows += 1
-            Tag.objects.filter(reference=relation_id).delete()
+            Tag.objects.filter(reference=relation_id, type=RELATION).delete()
             Node.objects.filter(relation_reference=relation_id).delete()
             Way.objects.filter(relation_reference=relation_id).delete()
             Relation.objects.filter(pk=relation_id).delete()
@@ -437,7 +443,7 @@ def clean_entities_without_name(self):
 
 def another_language(key):
     """
-
+    Detect if the tag has or not a name
     :param key:
     :return: 
     """

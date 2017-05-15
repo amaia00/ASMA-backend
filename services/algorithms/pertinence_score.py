@@ -2,6 +2,12 @@ from services.models import ParametersScorePertinence
 
 
 def get_pertinence_score(**kwargs):
+    """
+    This method determines the global score according to the weights of every attribute
+    
+    :param kwargs: 
+    :return: 
+    """
     gn_feature_code = kwargs.get('gn_feature_code')
     gn_feature_class = kwargs.get('gn_feature_class')
 
@@ -10,7 +16,6 @@ def get_pertinence_score(**kwargs):
 
     match_geographical_coordinates = float(kwargs.get('match_geographical_coordinates', 0))
 
-    params = []
     try:
         params = ParametersScorePertinence.objects.get(name='weight_matching',
                                                        gn_feature_code=gn_feature_code,
@@ -33,6 +38,11 @@ def get_pertinence_score(**kwargs):
 
 
 def get_pertinence_score_with_weight(**kwargs):
+    """
+    The same method as above, but we can send it the id of the weights
+    :param kwargs: 
+    :return: 
+    """
     gn_feature_code = kwargs.get('gn_feature_code')
     gn_feature_class = kwargs.get('gn_feature_class')
 

@@ -30,7 +30,7 @@ class Command(BaseCommand):
             help="The search ratio for the blocking")
 
     def handle(self, geoname_id, *args, **options):
-        # try:
+        try:
             gn_entity = Geonames.objects.get(pk=geoname_id[0])
             entity = EntityGeoNames(id=gn_entity.id, name=gn_entity.name, latitude=gn_entity.latitude,
                                     longitude=gn_entity.longitude, feature_class=gn_entity.fclass,
@@ -50,7 +50,7 @@ class Command(BaseCommand):
 
                 position_gn = PositionGPS(gn_entity.latitude, gn_entity.longitude)
                 position_osm = PositionGPS(latitude_osm, longitude_osm)
-                coordinates_matching = matching_coordinates(position_gn, position_osm)
+                coordinates_matching = matching_coordinates(position_gn, position_osm, search_ratio)
 
                 weight_param, pertinence_score = get_pertinence_score(match_name=entity['name_matching'],
                                                                       match_geographical_coordinates=
@@ -59,6 +59,8 @@ class Command(BaseCommand):
                                                                       gn_feature_code=gn_entity.fcode,
                                                                       gn_feature_class=gn_entity.fclass)
 
+                print("Entity OSM: ", entity['entity_osm'].id, entity['name_matching'], entity['type_matching'],
+                      coordinates_matching, pertinence_score)
                 correspondence = CorrespondenceEntity(reference_gn=gn_entity.id, reference_osm=entity['entity_osm'].id,
                                                       gn_name=gn_entity.name,
                                                       gn_feature_class=gn_entity.fclass,
@@ -85,5 +87,5 @@ class Command(BaseCommand):
 
             print("Quantite de matchs: ", len(list_align_entities))
 
-        # except Exception as error:
-        #     raise CommandError(error)
+        except Exception as error:
+            raise CommandError(error)

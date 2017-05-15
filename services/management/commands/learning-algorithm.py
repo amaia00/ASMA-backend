@@ -41,6 +41,7 @@ class Command(BaseCommand):
 
         try:
             learning_algorithm = LearningAlgorithm()
+
             for i in range(0, quantity):
                 training_set, test_set = learning_algorithm.generate_numpy_array_with_training_and_test_set()
 
@@ -68,6 +69,11 @@ class Command(BaseCommand):
                     print("test set features", test_set[:, 1:2])
                     print("test set target", test_set[:, 3])
 
+                """
+                Pour obtenir une distribution uniforme on peut appliquer la fonction 
+                softmax et après normaliser les valeurs entre 0 et 1 dans les ensembles de 
+                training et test
+                """
                 influence_type = learning_algorithm.get_similarity_attribute_reason(training_set[:, 1:2],
                                                                                     training_set[:, 3], 'type')
                 error_type_rate = learning_algorithm.validate_attribute_importance(test_set[:, 1:2], test_set[:, 3],
@@ -84,6 +90,11 @@ class Command(BaseCommand):
                     print("test set features", test_set[:, 2:3])
                     print("test set target", test_set[:, 3])
 
+                """
+                Étant donnée que les indices de similarité des coordinates sont plutôt elevés
+                [0.9, 1] on peut normaliser les valeurs avant de les envoyer vers l'algorihtme
+                d'apprentissage.
+                """
                 influence_coordinates = learning_algorithm.get_similarity_attribute_reason(training_set[:, 2:3],
                                                                                            training_set[:, 3],
                                                                                            'coordinates')
