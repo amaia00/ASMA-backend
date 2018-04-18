@@ -3,7 +3,7 @@
 
 - MIF11 - Projet d'Orientation en M2
 - Encadrant: Fabien DUCHATEAU
-- [Page du sujet](http://liris.cnrs.fr/~fduchate/ens/MIF20/sujets/2016-2017/sujet-integration.pdf)
+- [Page du sujet](https://perso.liris.cnrs.fr/fabien.duchateau/ens/MIF11/sujets/2016-2017/sujet-integration.pdf)
 
 ## Requeriments
 
