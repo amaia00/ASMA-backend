@@ -1,10 +1,4 @@
 # ASMA BackEnd
-
-### Auteurs
-
-- Amaia NAZABAL 11614291 **Email**: amaia.nazabal-ruiz-diaz@etu.univ-lyon1.fr
-- Sofiaa FADDI 11614340 **Email**: sofiaa.faddi@etu.univ-lyon1.fr
-
 ### Unité d'Enseignement
 
 - MIF11 - Projet d'Orientation en M2
